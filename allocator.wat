@@ -4,6 +4,31 @@
   (global $bytes_per_page (mut i32) (i32.const 65536))
   (global $span (mut i32) (i32.const 0))
 
+  ;;   >----------------->------------------v-------------------------------<
+  ;;  next size (i31) | next free? (i1) | next data (i8 * n) | prev ptr (i31) | prev free? (i1) | next size (i31) | ...
+  ;;   ^---------------------------------------------------<
+  ;;
+
+
+
+
+  ;; | free (1 bit) | size                       | data (size bytes) | prev free (1 bit) | offset (size + size byte length) |
+  ;; |--------------+----------------------------+-------------------+-------------------+----------------------------------|
+  ;; | x            | 0xxxxxx (6 bits)           |                   | x                 | 0xxxxxx (6 bits)                 |
+  ;; | x            | 10xxxxx (5 bits + 1 byte)  |                   | x                 | 10xxxxx (5 bits + 1 byte)        |
+  ;; | x            | 110xxxx (4 bits + 2 bytes) |                   | x                 | 110xxxx (4 bits + 2 bytes)       |
+  ;; | x            | 1110xxx (3 bits + 3 bytes) |                   | x                 | 1110xxx (3 bits + 3 bytes)       |
+  ;; | x            | 11110xx (2 bits + 4 bytes) |                   | x                 | 11110xx (2 bits + 4 bytes)       |
+  ;;
+  ;; malloc:
+  ;; use next_ptr to jump blocks until you reach an free block
+  ;; if node is smaller than requested block:
+  ;;    update next size
+  ;;    set next free = 1
+  ;;
+  ;;    compare pointer current pointer with next_ptr to see if empty block is big enough
+  ;; else jump to next node and repeat from top
+  ;;
 
   (func $inspect (param $x i32) (result i32)
     local.get $x
@@ -12,11 +37,13 @@
   )
 
   (func (export "init")
-    (local $end i32)
+    (local $ptr i32)
+    i32.const 0 ;; pointer 0
+
     global.get $bytes_per_page
     i32.const 1
     i32.sub
-    local.tee $end
+    local.tee $ptr
     i32.const 0
     call $encode
   )
@@ -39,11 +66,6 @@
     i32.and
   )
 
-  ;;  next (i32) | data (?) | prev (i32) | next (i32) | data (?) | ...
-  ;;  next/prev (i32) = ptr (i31) <> free (i1)
-  ;;
-  ;;
-  ;;
   (func $malloc (export "malloc") (param $size i32) (result i32)
     i32.const 0
   )
