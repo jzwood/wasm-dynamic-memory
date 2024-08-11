@@ -44,12 +44,14 @@
     i32.or
   )
 
-  (func $decode (param $node i32) (result i32 i32)
-    local.get $node
+  (func $decode (param $ptr i32) (result i32 i32)
+    local.get $ptr
+    i32.load8_u
+    call $dup
+
     i32.const 1
     i32.shr_u
 
-    local.get $node
     i32.const 1
     i32.and
   )
@@ -58,6 +60,15 @@
 
   (func $malloc (export "malloc") (param $size i32) (result i32)
     (local $ptr i32)
+
+
+
     i32.const 0
+  )
+
+  ;; UTILS
+  (func $dup (param $a i32) (result i32 i32)
+    local.get $a
+    local.get $a
   )
 )
