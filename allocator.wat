@@ -50,20 +50,10 @@
     call $dup
 
     i32.const 1
-    i32.shr_u
+    i32.shr_u ;; size
 
     i32.const 1
-    i32.and
-  )
-
-  ;; TODO
-
-  (func $malloc (export "malloc") (param $size i32) (result i32)
-    (local $ptr i32)
-
-
-
-    i32.const 0
+    i32.and ;; free
   )
 
   ;; UTILS
@@ -71,4 +61,21 @@
     local.get $a
     local.get $a
   )
+
+  ;; TODO
+
+  (func $malloc (export "malloc") (param $size i32) (result i32)
+    (local $block_size i32)  ;; 0
+    (local $block_free i32)  ;; 0
+    call $decode
+    local.set $block_size
+    local.set $block_free
+
+    local.get $block_size
+    local.get $size
+    i32.ge_u
+
+    i32.const 0
+  )
+
 )
