@@ -7,7 +7,8 @@ module Main exposing (..)
 --
 
 import Browser
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, aside, button, div, section, text)
+import Html.Attributes exposing (class, draggable, id, style)
 import Html.Events exposing (onClick)
 
 
@@ -58,7 +59,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick Decrement ] [ text "-" ]
-        , div [] [ text (String.fromInt model) ]
-        , button [ onClick Increment ] [ text "+" ]
+        [ section [ id "code" ] [ text "code" ]
+        , section [ id "opcodes" ]
+            [ div [ draggable "true" ] [ text "func" ]
+            , div [ draggable "true" ] [ text "var" ]
+            ]
         ]

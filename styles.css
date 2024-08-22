@@ -1,17 +1,43 @@
+:root {
+  --background: #000000;
+  --middle-ground: #262626;
+  --near-ground: white;
+  --background-text: #333;
+  --middle-ground-text: #333;
+  --near-ground-text: #333;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 html, body {
   padding: 0;
   margin: 0;
+  font-family: Courier New;
 }
 
 body {
-  background-color: black;
+  background-color: #262627; //  #333333;
 }
 
 main {
   width: 100%;
-  max-width: 720px;
-  background-color: #262626;
+  max-width: 520px;
   margin: 0 auto;
-  min-height: 100vh;
+  border-width: 0 2px;
+  border-color: #4E4D4E;
+  border-style: solid;
+}
+
+#code {
+  height: calc(100vh * 2 / 3);
+  background-color: #262627; // #333333;
+  color: aqua;
+  overflow: auto;
+}
+
+#opcodes {
+  height: calc(100vh / 3);
+  background-color: #2F3030;
 }
