@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-elm-format App.elm --yes
-elm-format Operators.elm --yes
+elm-format src/Main.elm --yes
+elm-format src/Operators.elm --yes

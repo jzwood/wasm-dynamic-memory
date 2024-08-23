@@ -15,10 +15,12 @@ html, body {
   padding: 0;
   margin: 0;
   font-family: Courier New;
+  font-size: large;
 }
 
 body {
   background-color: #262627; //  #333333;
+  color: ivory;
 }
 
 main {
@@ -31,13 +33,35 @@ main {
 }
 
 #code {
+  padding: 0 0.25rem;
   height: calc(100vh * 2 / 3);
   background-color: #262627; // #333333;
-  color: aqua;
+  /*color: aqua;*/
   overflow: auto;
 }
 
+#messages {
+  padding: 0 0.25rem;
+  height: calc(100vh / 12);
+  border-width: 2px 0;
+  border-color:  #4E4D4E;
+  border-style: solid;
+}
+
 #opcodes {
-  height: calc(100vh / 3);
-  background-color: #2F3030;
+  padding: 0 0.25rem;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  height: calc(100vh / 4);
+  overflow-x: scroll;
+  /*background-color: #2F3030;*/
+}
+
+.op {
+  background-color: #555;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  /*border: 1px solid red;*/
 }

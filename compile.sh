@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-elm-format App.elm --yes
-elm make App.elm --output=elm.js
+bash format &&
+elm make src/Main.elm --output=elm.js
