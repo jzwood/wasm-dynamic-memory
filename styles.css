@@ -14,8 +14,8 @@
 html, body {
   padding: 0;
   margin: 0;
-  font-family: Courier New;
-  font-size: large;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.1rem;
 }
 
 body {
@@ -49,7 +49,7 @@ main {
 }
 
 #opcodes {
-  padding: 0 0.25rem;
+  padding: 0.25rem;
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -63,5 +63,15 @@ main {
   background-color: #555;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  height: 1.75rem;
   /*border: 1px solid red;*/
 }
+
+.op:hover {
+  cursor: grab;
+}
+
+.op:active:hover {
+  cursor: grabbing;
+}
+

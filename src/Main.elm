@@ -4,7 +4,7 @@ import Browser
 import Html exposing (Html, aside, button, div, section, text)
 import Html.Attributes exposing (class, draggable, id, style)
 import Html.Events exposing (onClick)
-import Operators exposing (..)
+import Instructions exposing (..)
 
 
 
@@ -47,5 +47,5 @@ view model =
         [ section [ id "code" ] [ text "code" ]
         , section [ id "messages" ] [ text "messages" ]
         , section [ id "opcodes" ]
-            (List.map showOperator operators)
+            (toHtml instructions)
         ]
