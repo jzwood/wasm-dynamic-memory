@@ -16,43 +16,66 @@ type Type
     | Bool
 
 
-type Instruction
-    = Instruction { label : String, op : String, category : Category, signature : Signature }
-
-
 type Category
-    = Math
-    | ControlFlow
+    = Numeric
     | Variadic
     | Memory
-    | UserDefined
+    | ControlFlow
+
+
+type Instruction
+    = Instruction { label : String, op : String, category : Category, signature : Signature }
 
 
 type Signature
     = Signature { params : List Type, results : List Type }
 
 
+
+--- Abstract Syntax Tree
+
+
+type AST
+    = Module
+        { globals : List Global
+        , functions : List Function
+        }
+
+
+type Global
+    = Global
+
+
+type Function
+    = Function
+        { name : String
+        , signature : Signature
+        , body : List Instruction
+        }
+
+
 instructions : List Instruction
 instructions =
-    [ Instruction { label = "plus", op = "+", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "minus", op = "-", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "multiply", op = "*", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "divide", op = "/", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "remainder", op = "%", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "greater than", op = ">", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "greater than or equal to", op = "≥", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "less thanb", op = "<", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = " less than or equal to", op = "≥", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "equal", op = "=", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "not equal", op = "≠", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "bitwise/logical and", op = "and", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "bitwise/logical or", op = "or", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "bitwise/logical xor", op = "xor", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "left shift", op = "«", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "right shift", op = "»", category = Math, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    [ Instruction { label = "add", op = "+", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "subtract", op = "-", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "multiply", op = "*", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "divide", op = "/", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "remainder", op = "%", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "greater than", op = ">", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = "greater than or equal to", op = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = "less thanb", op = "<", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = " less than or equal to", op = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = "equal", op = "=", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = "not equal", op = "≠", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { label = "bitwise/logical and", op = "and", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "bitwise/logical or", op = "or", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "bitwise/logical xor", op = "xor", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "left shift", op = "«", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { label = "right shift", op = "»", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
 
     -- flow
-    , Instruction { label = "function", op = "fun", category = Math, signature = Signature { params = [], results = [] } }
+    , Instruction { label = "number", op = "num", category = Numeric, signature = Signature { params = [ Integer ], results = [] } }
+    , Instruction { label = "function", op = "f(x)", category = Numeric, signature = Signature { params = [], results = [] } }
     , Instruction { label = "set", op = "set", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
     , Instruction { label = "get", op = "get", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
 

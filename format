@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-elm-format src/Main.elm --yes
-elm-format src/Instructions.elm --yes
+elm-format src/ --yes
