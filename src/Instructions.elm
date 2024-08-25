@@ -12,6 +12,7 @@ type Msg
 
 type Type
     = Integer
+    | Pointer
     | Float
     | Bool
 
@@ -23,8 +24,14 @@ type Category
     | ControlFlow
 
 
+type Label
+    = None
+    | Explicit
+    | Inferred
+
+
 type Instruction
-    = Instruction { label : String, op : String, category : Category, signature : Signature }
+    = Instruction { id : InstructionType, desc : String, show : String, category : Category, signature : Signature }
 
 
 type Signature
@@ -54,52 +61,81 @@ type Function
         }
 
 
+type InstructionType
+    = Add
+    | Sub
+    | Mul
+    | Div
+    | Rem
+    | Gt
+    | Gte
+    | Lt
+    | Lte
+    | Eq
+    | Neq
+    | And
+    | Or
+    | Xor
+    | Rsh
+    | Lsh
+    | Num
+    | Fun
+    | Set
+    | Get
+    | Block
+    | If
+    | Loop
+    | Malloc
+    | Read
+    | Write
+
+
 instructions : List Instruction
 instructions =
-    [ Instruction { label = "add", op = "+", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "subtract", op = "-", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "multiply", op = "*", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "divide", op = "/", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "remainder", op = "%", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "greater than", op = ">", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "greater than or equal to", op = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "less thanb", op = "<", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = " less than or equal to", op = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "equal", op = "=", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "not equal", op = "≠", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
-    , Instruction { label = "bitwise/logical and", op = "and", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "bitwise/logical or", op = "or", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "bitwise/logical xor", op = "xor", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "left shift", op = "«", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
-    , Instruction { label = "right shift", op = "»", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    [ Instruction { id = Add, desc = "add", show = "+", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Sub, desc = "subtract", show = "-", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Mul, desc = "multiply", show = "*", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Div, desc = "divide", show = "/", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Rem, desc = "remainder", show = "%", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Gt, desc = "greater than", show = ">", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = Gte, desc = "greater than or equal to", show = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = Lt, desc = "less than", show = "<", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = Lte, desc = "less than or equal to", show = "≥", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = Eq, desc = "equal", show = "=", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = Neq, desc = "not equal", show = "≠", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Bool ] } }
+    , Instruction { id = And, desc = "bitwise/logical and", show = "and", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Or, desc = "bitwise/logical or", show = "or", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Xor, desc = "bitwise/logical xor", show = "xor", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Lsh, desc = "left shift", show = "«", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
+    , Instruction { id = Rsh, desc = "right shift", show = "»", category = Numeric, signature = Signature { params = [ Integer, Integer ], results = [ Integer ] } }
 
     -- flow
-    , Instruction { label = "number", op = "num", category = Numeric, signature = Signature { params = [ Integer ], results = [] } }
-    , Instruction { label = "function", op = "f(x)", category = Numeric, signature = Signature { params = [], results = [] } }
-    , Instruction { label = "set", op = "set", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
-    , Instruction { label = "get", op = "get", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
+    , Instruction { id = Num, desc = "constant number", show = "num", category = Numeric, signature = Signature { params = [ Integer ], results = [] } }
+    , Instruction { id = Fun, desc = "function definition", show = "f(x)", category = Numeric, signature = Signature { params = [], results = [] } }
+    , Instruction { id = Set, desc = "set local variable", show = "set", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
+    , Instruction { id = Get, desc = "get local variable", show = "get", category = Variadic, signature = Signature { params = [ Integer ], results = [] } }
 
     -- control
-    , Instruction { label = "block", op = "block", category = ControlFlow, signature = Signature { params = [], results = [] } }
-    , Instruction { label = "if statement", op = "if", category = ControlFlow, signature = Signature { params = [], results = [] } }
-    , Instruction { label = "loop", op = "loop", category = ControlFlow, signature = Signature { params = [], results = [] } }
-    , Instruction { label = "allocate n bytes of memory", op = "malloc", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "read 1 byte", op = "read1", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "read 2 byte", op = "read2", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "read 4 byte", op = "read4", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "write 1 byte", op = "write1", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "write 2 byte", op = "write2", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
-    , Instruction { label = "write 4 byte", op = "write4", category = Memory, signature = Signature { params = [ Integer ], results = [ Integer ] } }
+    , Instruction { id = Block, desc = "block", show = "block", category = ControlFlow, signature = Signature { params = [], results = [] } }
+    , Instruction { id = If, desc = "if statement", show = "if", category = ControlFlow, signature = Signature { params = [], results = [] } }
+    , Instruction { id = Loop, desc = "loop", show = "loop", category = ControlFlow, signature = Signature { params = [], results = [] } }
+    , Instruction { id = Malloc, desc = "allocate n bytes of memory", show = "malloc", category = Memory, signature = Signature { params = [ Integer ], results = [ Pointer ] } }
+    , Instruction { id = Read, desc = "read 1 byte", show = "read1", category = Memory, signature = Signature { params = [ Pointer ], results = [ Integer ] } }
+    , Instruction { id = Read, desc = "read 2 byte", show = "read2", category = Memory, signature = Signature { params = [ Pointer ], results = [ Integer ] } }
+    , Instruction { id = Read, desc = "read 4 byte", show = "read4", category = Memory, signature = Signature { params = [ Pointer ], results = [ Integer ] } }
+    , Instruction { id = Write, desc = "write 1 byte", show = "write1", category = Memory, signature = Signature { params = [ Pointer, Integer ], results = [] } }
+    , Instruction { id = Write, desc = "write 2 byte", show = "write2", category = Memory, signature = Signature { params = [ Pointer, Integer ], results = [] } }
+    , Instruction { id = Write, desc = "write 4 byte", show = "write4", category = Memory, signature = Signature { params = [ Pointer, Integer ], results = [] } }
     ]
 
 
 toHtml : List Instruction -> List (Html Msg)
 toHtml ins =
-    List.map (\(Instruction { op, category, signature }) -> div [ class "op", draggable "true" ] [ text op ]) ins
+    List.map (\(Instruction { show, category, signature }) -> div [ class "op", draggable "true" ] [ text show ]) ins
 
 
 
 --ins
 --|> groupWhile (\(Instruction a) (Instruction b) -> a.category == b.category)
 --|> List.concatMap
---(\( i0, is ) -> List.map (\(Instruction i) -> div [ class "op", draggable "true" ] [ text i.op ]) (i0 :: is))
+--(\( i0, is ) -> List.map (\(Instruction i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))
