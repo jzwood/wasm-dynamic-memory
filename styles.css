@@ -60,7 +60,8 @@ main {
 }
 
 .op {
-  background-color: #555;
+  /*background-color: #555;*/
+  background-color: #3c3c3c;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   height: 1.75rem;
