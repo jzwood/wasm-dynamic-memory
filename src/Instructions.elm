@@ -17,10 +17,11 @@ type Type
 
 type alias Result = List Type
 type alias Label = String
+type alias Docs = String
 type alias Variable = String
 type alias Children = List Instruction
 
-type Signature = Signature { params : List Type, result : Result }
+type Signature = Signature (List Type) Result
 
 --- Abstract Syntax Tree
 type AST = Module (List Function)
@@ -67,47 +68,14 @@ type Instruction
     | Write4
 
 type Meta
-    = AddMeta
-    | SubMeta
-    | MulMeta
-    | DivMeta
-    | RemMeta
-    | GtMeta
-    | GteMeta
-    | LtMeta
-    | LteMeta
-    | EqMeta
-    | NeqMeta
-    | AndMeta
-    | OrMeta
-    | XorMeta
-    | RshMeta
-    | LshMeta
-    | NumMeta
-    | LetMeta
-    | SetMeta
-    | GetMeta
-    | BlockMeta
-    | LoopMeta
-    | IfMeta
-    | ElseMeta
-    | BrMeta
-    | BrIfMeta
-    | ReturnMeta
-    | CallMeta
-    | NopMeta
-    | DropMeta
-    | MallocMeta
-    | Read1Meta
-    | Read2Meta
-    | Read4Meta
-    | Write1Meta
-    | Write2Meta
-    | Write4Meta
+    = Instr Instruction Label Docs Signature
+    | Fun Docs Signature
 
 instructions : List Instruction
 instructions =
-    []
+    [
+      Instr Add "+" "" (Sig )
+    ]
 
 
 toHtml : List Instruction -> List (Html Msg)
