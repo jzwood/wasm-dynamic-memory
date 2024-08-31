@@ -52,18 +52,18 @@ type Function
 
 
 type Instruction
-    = Operator Op
-    | ControlFlow CF
+    = Op Operator
+    | CF ControlFlow
 
 
-type CF
+type ControlFlow
     = Block
     | Loop
     | If
     | Else
 
 
-type Op
+type Operator
     = Add
     | Sub
     | Mul
@@ -103,7 +103,7 @@ type Op
 show : Instruction -> String
 show instr =
     case instr of
-        ControlFlow cf ->
+        CF cf ->
             case cf of
                 Block ->
                     "block"
@@ -117,7 +117,7 @@ show instr =
                 Else ->
                     "else"
 
-        Operator op ->
+        Op op ->
             case op of
                 Add ->
                     "+"
@@ -168,7 +168,7 @@ show instr =
                     "«"
 
                 Num ->
-                    "num"
+                    "const"
 
                 Fun ->
                     "f(x)"
@@ -225,7 +225,7 @@ show instr =
 docs : Instruction -> String
 docs instr =
     case instr of
-        ControlFlow cf ->
+        CF cf ->
             case cf of
                 Block ->
                     "block"
@@ -234,119 +234,157 @@ docs instr =
                     "loop"
 
                 If ->
-                    "if"
+                    "if condition"
 
                 Else ->
                     "else"
 
-        Operator op ->
+        Op op ->
             case op of
                 Add ->
-                    "+"
+                    "add"
 
                 Sub ->
-                    "-"
+                    "subtract"
 
                 Mul ->
-                    "mult"
+                    "multiply"
 
                 Div ->
-                    "div"
-
-                Rem ->
-                    "%"
+                    "divide"
 
                 Gt ->
-                    ">"
-
-                Gte ->
-                    "≥"
+                    "greater than"
 
                 Lt ->
-                    "<"
+                    "less than"
+
+                Gte ->
+                    "greater than or equal to"
 
                 Lte ->
-                    "≤"
+                    "less than or equal to"
+
+                Rem ->
+                    "remainder"
 
                 Eq ->
-                    "="
+                    "equal"
 
                 Neq ->
-                    "≠"
+                    "not equal"
 
                 And ->
-                    "and"
+                    "bitwise/logical and"
 
                 Or ->
-                    "or"
+                    "bitwise/logical or"
 
                 Xor ->
-                    "xor"
-
-                Rsh ->
-                    "»"
+                    "bitwise/logical xor"
 
                 Lsh ->
-                    "«"
+                    "left shift"
+
+                Rsh ->
+                    "right shift"
 
                 Num ->
-                    "num"
+                    "constant number"
 
                 Fun ->
-                    "f(x)"
+                    "function definition"
 
                 Let ->
-                    "let"
+                    "init local variable"
 
                 Set ->
-                    "set"
+                    "set local variable"
 
                 Get ->
-                    "get"
+                    "get local variable"
 
                 Br ->
-                    "br"
+                    "break"
 
                 BrIf ->
-                    "br_if"
+                    "break if"
 
                 Return ->
                     "return"
 
                 Call ->
-                    "call"
+                    "call function"
 
                 Nop ->
-                    "nop"
+                    "no operation"
 
                 Drop ->
                     "drop"
 
                 Malloc ->
-                    "malloc"
+                    "allocate n bytes of memory"
 
                 Read1 ->
-                    "read1"
+                    "read 1 byte"
 
                 Read2 ->
-                    "read2"
+                    "read 2 byte"
 
                 Read4 ->
-                    "read4"
+                    "read 4 byte"
 
                 Write1 ->
-                    "write1"
+                    "write 1 byte"
 
                 Write2 ->
-                    "write2"
+                    "write 2 byte"
 
                 Write4 ->
-                    "write4"
+                    "write 4 byte"
 
 
 instructions : List Instruction
 instructions =
-    []
+    [ Op Add
+    , Op Sub
+    , Op Mul
+    , Op Div
+    , Op Rem
+    , Op Gt
+    , Op Gte
+    , Op Lt
+    , Op Lte
+    , Op Eq
+    , Op Neq
+    , Op And
+    , Op Or
+    , Op Xor
+    , Op Rsh
+    , Op Lsh
+    , Op Fun
+    , Op Num
+    , Op Let
+    , Op Set
+    , Op Get
+    , CF Block
+    , CF Loop
+    , CF If
+    , CF Else
+    , Op Br
+    , Op BrIf
+    , Op Return
+    , Op Call
+    , Op Nop
+    , Op Drop
+    , Op Malloc
+    , Op Read1
+    , Op Read2
+    , Op Read4
+    , Op Write1
+    , Op Write2
+    , Op Write4
+    ]
 
 
 toHtml : List Instruction -> List (Html Msg)
