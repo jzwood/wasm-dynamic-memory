@@ -15,18 +15,42 @@ type Type
     | Pointer
     | Bool
 
-type alias Result = List Type
-type alias Label = String
-type alias Docs = String
-type alias Variable = String
-type alias Children = List Instruction
 
-type Signature = Signature (List Type) Result
+type alias Result =
+    List Type
+
+
+type alias Label =
+    String
+
+
+type alias Docs =
+    String
+
+
+type alias Variable =
+    String
+
+
+type alias Children =
+    List Instruction
+
+
+type Signature
+    = Signature (List Type) Result
+
+
 
 --- Abstract Syntax Tree
-type AST = Module (List Function)
 
-type Function = Function Label Signature Children
+
+type AST
+    = Module (List Function)
+
+
+type Function
+    = Function Label Signature Children
+
 
 type Instruction
     = Add
@@ -56,7 +80,7 @@ type Instruction
     | Br Label
     | BrIf Label
     | Return
-    | Call Label
+    | Call Variable
     | Nop
     | Drop
     | Malloc
@@ -67,20 +91,25 @@ type Instruction
     | Write2
     | Write4
 
-type Meta
-    = Instr Instruction Label Docs Signature
-    | Fun Docs Signature
 
-instructions : List Instruction
+type UI
+    = UI { instr : Instruction, show : String, docs : Docs }
+
+
+
+--type Meta
+--= Instr Instruction Label Docs Signature
+--| Fun Docs Signature
+
+
+instructions : List UI
 instructions =
-    [
-      Instr Add "+" "" (Sig )
-    ]
+    [ UI { instr = Add, show = "+", docs = "addition" } ]
 
 
-toHtml : List Instruction -> List (Html Msg)
+toHtml : List UI -> List (Html Msg)
 toHtml ins =
-    List.map (\instr -> div [ class "op", draggable "true" ] [ text (show instr) ]) ins
+    List.map (\(UI ui) -> div [ class "op", draggable "true" ] [ text ui.show ]) ins
 
 
 
