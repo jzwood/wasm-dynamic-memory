@@ -27,9 +27,10 @@ main {
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  border-width: 0 2px;
-  border-color: #4E4D4E;
-  border-style: solid;
+  border: none;
+  /*border-width: 0 2px;*/
+  /*border-color: #4E4D4E;*/
+  /*border-style: solid;*/
 }
 
 #code {
@@ -43,12 +44,13 @@ main {
 #messages {
   padding: 0 0.25rem;
   height: calc(100vh / 12);
-  border-width: 2px 0;
-  border-color:  #4E4D4E;
-  border-style: solid;
+  border: none;
+  /*border-width: 2px 0;*/
+  /*border-color:  #4E4D4E;*/
+  /*border-style: solid;*/
 }
 
-#opcodes {
+#instructions {
   padding: 0.25rem;
   display: flex;
   flex-direction: column;
@@ -59,7 +61,7 @@ main {
   /*background-color: #2F3030;*/
 }
 
-.op {
+.instr {
   /*background-color: #555;*/
   background-color: #3c3c3c;
   padding: 0.25rem 0.5rem;
@@ -68,11 +70,32 @@ main {
   /*border: 1px solid red;*/
 }
 
-.op:hover {
+.instr:hover {
   cursor: grab;
 }
 
-.op:active:hover {
+.instr:active:hover {
   cursor: grabbing;
+}
+
+
+.line {
+  padding: 0;
+  list-style: none;
+}
+.line:first {
+  margin-left: 10px;
+  counter-reset: line;
+}
+.line {
+  counter-increment: line;
+}
+.line::before {
+  content: counter(line);
+  display: inline-block;
+  text-align: right;
+  width: 2ch;
+  font-size: small;
+  color: #888888;
 }
 

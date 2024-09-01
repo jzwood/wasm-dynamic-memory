@@ -19,13 +19,17 @@ main =
 -- MODEL
 
 
+type Module
+    = Module Children
+
+
 type alias Model =
-    Int
+    { ast : List Instruction }
 
 
 init : Model
 init =
-    0
+    { ast = List.repeat 50 EmptyLine }
 
 
 
@@ -42,10 +46,11 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
+view { ast } =
     div []
-        [ section [ id "code" ] [ text "code" ]
+        [ section [ id "code" ]
+            (List.map (\x -> div [ class "line" ] [ text "" ]) ast)
         , section [ id "messages" ] [ text "messages" ]
-        , section [ id "opcodes" ]
+        , section [ id "instructions" ]
             (toHtml instructions)
         ]

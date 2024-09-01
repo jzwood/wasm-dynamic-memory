@@ -44,12 +44,9 @@ type Signature
 --- Abstract Syntax Tree
 
 
-type AST
-    = Module Children
-
-
 type Instruction
-    = Add
+    = EmptyLine
+    | Add
     | Sub
     | Mul
     | Div
@@ -91,12 +88,6 @@ type Instruction
 
 type UI
     = UI { instr : Instruction, button : String, docs : Docs }
-
-
-
---type Meta
---= Instr Instruction Label Docs Signature
---| Fun Docs Signature
 
 
 instructions : List UI
@@ -145,7 +136,7 @@ instructions =
 
 toHtml : List UI -> List (Html Msg)
 toHtml ins =
-    List.map (\(UI ui) -> div [ class "op", draggable "true" ] [ text ui.button ]) ins
+    List.map (\(UI ui) -> div [ class "instr", draggable "true" ] [ text ui.button ]) ins
 
 
 
