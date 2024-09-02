@@ -1,10 +1,11 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, aside, button, div, section, text)
+import Html exposing (Attribute, Html, aside, button, div, section, text)
 import Html.Attributes exposing (class, draggable, id, style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (on, onClick)
 import Instructions exposing (..)
+import Json.Decode as Decode
 
 
 
@@ -24,12 +25,17 @@ type Module
 
 
 type alias Model =
-    { ast : List Instruction }
+    { ast : List Instruction, cursor : Maybe Int }
+
+
+type Msg
+    = Increment
+    | Decrement
 
 
 init : Model
 init =
-    { ast = List.repeat 50 EmptyLine }
+    { ast = List.repeat 50 EmptyLine, cursor = Nothing }
 
 
 
@@ -41,16 +47,48 @@ update msg model =
     model
 
 
+onDragEnter : msg -> Attribute msg
+onDragEnter message =
+    on "click" (Decode.succeed message)
+
+
 
 -- VIEW
 
 
 view : Model -> Html Msg
-view { ast } =
+view { ast, cursor } =
     div []
         [ section [ id "code" ]
-            (List.map (\x -> div [ class "line" ] [ text "" ]) ast)
+            (List.indexedMap
+                (\i x ->
+                    div
+                        [ class "line"
+                        , class
+                            (if Just i == cursor then
+                                "cursor"
+
+                             else
+                                ""
+                            )
+                        ]
+                        [ text "" ]
+                )
+                ast
+            )
         , section [ id "messages" ] [ text "messages" ]
         , section [ id "instructions" ]
             (toHtml instructions)
         ]
+
+
+toHtml : List Instr -> List (Html Msg)
+toHtml ins =
+    List.map (\(Instr ui) -> div [ class "instr", draggable "true" ] [ text ui.button ]) ins
+
+
+
+--ins
+--|> groupWhile (\(Instruction a) (Instruction b) -> a.category == b.category)
+--|> List.concatMap
+--(\( i0, is ) -> List.map (\(Instruction i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))

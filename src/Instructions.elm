@@ -5,11 +5,6 @@ import Html.Attributes exposing (attribute, class, draggable, id, style)
 import List.Extra exposing (groupWhile)
 
 
-type Msg
-    = Increment
-    | Decrement
-
-
 type Type
     = Integer
     | Pointer
@@ -86,61 +81,49 @@ type Instruction
     | Write4
 
 
-type UI
-    = UI { instr : Instruction, button : String, docs : Docs }
+type Instr
+    = Instr { instr : Instruction, button : String, docs : Docs }
 
 
-instructions : List UI
+instructions : List Instr
 instructions =
-    [ UI { instr = Add, button = "+", docs = "addition" }
-    , UI { instr = Block "" [] [], button = "block", docs = "breaking to block label jumps out of block" }
-    , UI { instr = Loop "" [] [], button = "loop", docs = "breaking to loop label jumps to top of loop" }
-    , UI { instr = If "" [] [] [], button = "if", docs = "breaking to if label jumps out of if" }
-    , UI { instr = Else [], button = "else", docs = "else branch of if statement" }
-    , UI { instr = Add, button = "+", docs = "addition" }
-    , UI { instr = Sub, button = "sub", docs = "subtraction" }
-    , UI { instr = Mul, button = "mult", docs = "multiplication" }
-    , UI { instr = Div, button = "div", docs = "division" }
-    , UI { instr = Rem, button = "%", docs = "remainder" }
-    , UI { instr = Gt, button = ">", docs = "greater than" }
-    , UI { instr = Gte, button = "≥", docs = "greater than or equal" }
-    , UI { instr = Lt, button = "<", docs = "less than" }
-    , UI { instr = Lte, button = "≤", docs = "less than or equal" }
-    , UI { instr = Eq, button = "=", docs = "equal" }
-    , UI { instr = Neq, button = "≠", docs = "not equal" }
-    , UI { instr = And, button = "and", docs = "bitwise/logical and" }
-    , UI { instr = Or, button = "or", docs = "bitwise/logical or" }
-    , UI { instr = Xor, button = "xor", docs = "bitwise/logical xor" }
-    , UI { instr = Rsh, button = "»", docs = "bitwise right shift" }
-    , UI { instr = Lsh, button = "«", docs = "bitwise left shift" }
-    , UI { instr = Num 0, button = "num", docs = "constant number" }
-    , UI { instr = Fun "" (Sig [] []) [], button = "f(x)", docs = "function definition" }
-    , UI { instr = Let "", button = "let", docs = "local variable declaration" }
-    , UI { instr = Set "", button = "set", docs = "set local variable" }
-    , UI { instr = Get "", button = "get", docs = "get local variable" }
-    , UI { instr = Br "", button = "br", docs = "break to label" }
-    , UI { instr = BrIf "", button = "br_if", docs = "if truthy break to label" }
-    , UI { instr = Return, button = "return", docs = "return function" }
-    , UI { instr = Call "", button = "call", docs = "call function" }
-    , UI { instr = Nop, button = "nop", docs = "no operation" }
-    , UI { instr = Drop, button = "drop", docs = "drop top of stack" }
-    , UI { instr = Malloc, button = "malloc", docs = "allocate n bytes" }
-    , UI { instr = Read1, button = "read1", docs = "read 1 bytee" }
-    , UI { instr = Read2, button = "read2", docs = "read 2 bytes" }
-    , UI { instr = Read4, button = "read4", docs = "read 4 bytes" }
-    , UI { instr = Write1, button = "write1", docs = "write 1 byte" }
-    , UI { instr = Write2, button = "write2", docs = "write 2 bytes" }
-    , UI { instr = Write4, button = "write4", docs = "write 4 bytes" }
+    [ Instr { instr = Add, button = "+", docs = "addition" }
+    , Instr { instr = Block "" [] [], button = "block", docs = "breaking to block label jumps out of block" }
+    , Instr { instr = Loop "" [] [], button = "loop", docs = "breaking to loop label jumps to top of loop" }
+    , Instr { instr = If "" [] [] [], button = "if", docs = "breaking to if label jumps out of if" }
+    , Instr { instr = Else [], button = "else", docs = "else branch of if statement" }
+    , Instr { instr = Add, button = "+", docs = "addition" }
+    , Instr { instr = Sub, button = "sub", docs = "subtraction" }
+    , Instr { instr = Mul, button = "mult", docs = "multiplication" }
+    , Instr { instr = Div, button = "div", docs = "division" }
+    , Instr { instr = Rem, button = "%", docs = "remainder" }
+    , Instr { instr = Gt, button = ">", docs = "greater than" }
+    , Instr { instr = Gte, button = "≥", docs = "greater than or equal" }
+    , Instr { instr = Lt, button = "<", docs = "less than" }
+    , Instr { instr = Lte, button = "≤", docs = "less than or equal" }
+    , Instr { instr = Eq, button = "=", docs = "equal" }
+    , Instr { instr = Neq, button = "≠", docs = "not equal" }
+    , Instr { instr = And, button = "and", docs = "bitwise/logical and" }
+    , Instr { instr = Or, button = "or", docs = "bitwise/logical or" }
+    , Instr { instr = Xor, button = "xor", docs = "bitwise/logical xor" }
+    , Instr { instr = Rsh, button = "»", docs = "bitwise right shift" }
+    , Instr { instr = Lsh, button = "«", docs = "bitwise left shift" }
+    , Instr { instr = Num 0, button = "num", docs = "constant number" }
+    , Instr { instr = Fun "" (Sig [] []) [], button = "f(x)", docs = "function definition" }
+    , Instr { instr = Let "", button = "let", docs = "local variable declaration" }
+    , Instr { instr = Set "", button = "set", docs = "set local variable" }
+    , Instr { instr = Get "", button = "get", docs = "get local variable" }
+    , Instr { instr = Br "", button = "br", docs = "break to label" }
+    , Instr { instr = BrIf "", button = "br_if", docs = "if truthy break to label" }
+    , Instr { instr = Return, button = "return", docs = "return function" }
+    , Instr { instr = Call "", button = "call", docs = "call function" }
+    , Instr { instr = Nop, button = "nop", docs = "no operation" }
+    , Instr { instr = Drop, button = "drop", docs = "drop top of stack" }
+    , Instr { instr = Malloc, button = "malloc", docs = "allocate n bytes" }
+    , Instr { instr = Read1, button = "read1", docs = "read 1 bytee" }
+    , Instr { instr = Read2, button = "read2", docs = "read 2 bytes" }
+    , Instr { instr = Read4, button = "read4", docs = "read 4 bytes" }
+    , Instr { instr = Write1, button = "write1", docs = "write 1 byte" }
+    , Instr { instr = Write2, button = "write2", docs = "write 2 bytes" }
+    , Instr { instr = Write4, button = "write4", docs = "write 4 bytes" }
     ]
-
-
-toHtml : List UI -> List (Html Msg)
-toHtml ins =
-    List.map (\(UI ui) -> div [ class "instr", draggable "true" ] [ text ui.button ]) ins
-
-
-
---ins
---|> groupWhile (\(Instruction a) (Instruction b) -> a.category == b.category)
---|> List.concatMap
---(\( i0, is ) -> List.map (\(Instruction i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))
