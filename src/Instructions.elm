@@ -62,6 +62,7 @@ insert : Instruction -> Cursor -> Cursor -> List Instruction -> ( List Instructi
 insert instr cursor line ast =
     if cursor == line then
         ( instr :: ast, line + 1 )
+        -- @TODO change to (Maybe Cursor, List Instruction) so that we can short circuit
 
     else
         case ast of
@@ -76,25 +77,13 @@ insert instr cursor line ast =
                 in
                 case i of
                     Fun n s children ->
-                        let
-                            ( nextChildren, nextLine ) =
-                                innerInsert children
-                        in
-                        ( Fun n s nextChildren :: is, nextLine )
+                        applyFirst (\nextChildren -> Fun n s nextChildren :: is) (innerInsert children)
 
                     Block l r children ->
-                        let
-                            ( nextChildren, nextLine ) =
-                                innerInsert children
-                        in
-                        ( Block l r nextChildren :: is, nextLine )
+                        applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
 
                     Loop l r children ->
-                        let
-                            ( nextChildren, nextLine ) =
-                                innerInsert children
-                        in
-                        ( Loop l r nextChildren :: is, nextLine )
+                        applyFirst (\nextChildren -> Loop l r nextChildren :: is) (innerInsert children)
 
                     If l r consequent alternative ->
                         let

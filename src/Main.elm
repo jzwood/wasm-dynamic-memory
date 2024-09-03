@@ -41,12 +41,16 @@ init =
 
 update : Msg -> Model -> Model
 update msg model =
+    let
+        { ast } =
+            model
+    in
     case msg of
         SetCursor c ->
             { model | cursor = c }
 
         InsertInstruction i c ->
-            model
+            { model | ast = insert i c 0 ast |> Tuple.first }
 
         Nop ->
             model
@@ -105,7 +109,7 @@ view { ast, cursor } =
                                 ""
                             )
                         ]
-                        [ text "" ]
+                        [ text "~" ]
                 )
                 ast
             )
