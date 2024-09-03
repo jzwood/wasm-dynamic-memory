@@ -53,35 +53,61 @@ type Signature
 --op -> (cursor, ast)
 
 
-insert : Instruction -> Cursor -> Cursor -> List Instruction -> List Instruction
+applyFirst : (a -> b) -> ( a, c ) -> ( b, c )
+applyFirst f ( x, y ) =
+    ( f x, y )
+
+
+insert : Instruction -> Cursor -> Cursor -> List Instruction -> ( List Instruction, Cursor )
 insert instr cursor line ast =
-    case ast of
-        [] ->
-            ast
+    if cursor == line then
+        ( instr :: ast, line + 1 )
 
-        i :: is ->
-            case i of
-                Fun _ _ children ->
-                    ast
+    else
+        case ast of
+            [] ->
+                ( ast, line )
 
-                Block _ _ children ->
-                    ast
+            i :: is ->
+                let
+                    innerInsert : List Instruction -> ( List Instruction, Cursor )
+                    innerInsert =
+                        insert instr cursor (line + 1)
+                in
+                case i of
+                    Fun n s children ->
+                        let
+                            ( nextChildren, nextLine ) =
+                                innerInsert children
+                        in
+                        ( Fun n s nextChildren :: is, nextLine )
 
-                Loop _ _ children ->
-                    ast
+                    Block l r children ->
+                        let
+                            ( nextChildren, nextLine ) =
+                                innerInsert children
+                        in
+                        ( Block l r nextChildren :: is, nextLine )
 
-                If _ _ consequent alternative ->
-                    ast
+                    Loop l r children ->
+                        let
+                            ( nextChildren, nextLine ) =
+                                innerInsert children
+                        in
+                        ( Loop l r nextChildren :: is, nextLine )
 
-                Else children ->
-                    ast
+                    If l r consequent alternative ->
+                        let
+                            ( nextConsequent, nextLine ) =
+                                innerInsert consequent
 
-                op ->
-                    if cursor == line then
-                        instr :: ast
+                            ( nextAlternative, nextNextLine ) =
+                                insert instr cursor nextLine alternative
+                        in
+                        ( If l r nextConsequent nextAlternative :: is, nextNextLine )
 
-                    else
-                        i :: insert instr cursor (line + 1) is
+                    op ->
+                        applyFirst ((::) i) (insert instr cursor (line + 1) is)
 
 
 
