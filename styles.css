@@ -46,10 +46,9 @@ main {
 #messages {
   padding: 0 0.25rem;
   height: calc(100vh / 12);
-  border: none;
-  /*border-width: 2px 0;*/
-  /*border-color:  #4E4D4E;*/
-  /*border-style: solid;*/
+  border-width: 1px;
+  border-color:  #4E4D4E;
+  border-style: solid;
 }
 
 #instructions {
@@ -97,6 +96,7 @@ main {
   display: inline-block;
   text-align: right;
   width: 2ch;
+  margin-right: 5px;
   font-size: small;
   color: #888888;
 }

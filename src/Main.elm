@@ -21,18 +21,19 @@ main =
 
 
 type alias Model =
-    { ast : List Instruction, cursor : Maybe Cursor }
+    { ast : List Instr, cursor : Maybe Cursor, instr : Instr, message : String }
 
 
 type Msg
     = SetCursor (Maybe Cursor)
-    | InsertInstruction Instruction Cursor
+    | InsertInstr Cursor
+    | SetDragging Instr
     | Nop
 
 
 init : Model
 init =
-    { ast = List.repeat 50 EmptyLine, cursor = Nothing }
+    { ast = List.repeat 30 EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
 
 
 
@@ -42,15 +43,22 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     let
-        { ast } =
+        { cursor, instr } =
             model
     in
     case msg of
         SetCursor c ->
-            { model | cursor = c }
+            { model | cursor = c, message = Maybe.withDefault 0 cursor |> String.fromInt }
 
-        InsertInstruction i c ->
-            { model | ast = insert i c 0 ast |> Tuple.first }
+        InsertInstr c ->
+            let
+                ( ast, c2 ) =
+                    insert instr c 0 model.ast
+            in
+            { model | ast = ast, cursor = Nothing, message = (getMeta instr).button }
+
+        SetDragging i ->
+            { model | cursor = Nothing, instr = i }
 
         Nop ->
             model
@@ -59,6 +67,11 @@ update msg model =
 alwaysPreventDefault : msg -> ( msg, Bool )
 alwaysPreventDefault msg =
     ( msg, True )
+
+
+onDragStart : Instr -> Attribute Msg
+onDragStart instr =
+    on "dragstart" (Decode.succeed (SetDragging instr))
 
 
 onDragEnter : Msg -> Attribute Msg
@@ -76,9 +89,9 @@ onDragOver =
     preventDefaultOn "dragover" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
 
 
-onDrop : Instruction -> Cursor -> Attribute Msg
-onDrop instr cursor =
-    preventDefaultOn "drop" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstruction instr cursor)))
+onDrop : Cursor -> Attribute Msg
+onDrop cursor =
+    preventDefaultOn "drop" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstr cursor)))
 
 
 onDragEnd : Attribute Msg
@@ -91,29 +104,34 @@ onDragEnd =
 
 
 view : Model -> Html Msg
-view { ast, cursor } =
+view { ast, cursor, message } =
     div []
         [ section [ id "code" ]
             (List.indexedMap
                 (\i instr ->
+                    let
+                        meta =
+                            getMeta instr
+                    in
                     div
                         [ onDragEnter (SetCursor (Just i))
                         , onDragOver
-                        , onDrop instr i
+                        , onDrop i
                         , class "line"
+                        , class meta.class
                         , class
-                            (if Just i == cursor then
+                            (if cursor == Just i then
                                 "cursor"
 
                              else
                                 ""
                             )
                         ]
-                        [ text "~" ]
+                        [ meta.button |> text ]
                 )
                 ast
             )
-        , section [ id "messages" ] [ text (Maybe.withDefault 0 cursor |> String.fromInt) ]
+        , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ]
             (toHtml instructions)
         ]
@@ -121,11 +139,11 @@ view { ast, cursor } =
 
 toHtml : List Instr -> List (Html Msg)
 toHtml ins =
-    List.map (\(Instr ui) -> div [ class "instr", draggable "true" ] [ text ui.button ]) ins
+    List.map (\instr -> div [ class "instr", draggable "true", onDragStart instr ] [ (getMeta instr).button |> text ]) ins
 
 
 
 --ins
---|> groupWhile (\(Instruction a) (Instruction b) -> a.category == b.category)
+--|> groupWhile (\(Instr a) (Instr b) -> a.category == b.category)
 --|> List.concatMap
---(\( i0, is ) -> List.map (\(Instruction i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))
+--(\( i0, is ) -> List.map (\(Instr i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))

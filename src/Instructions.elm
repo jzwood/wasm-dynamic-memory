@@ -32,7 +32,7 @@ type alias Variable =
 
 
 type alias Children =
-    List Instruction
+    List Instr
 
 
 type Signature
@@ -41,8 +41,8 @@ type Signature
 
 
 -- foldl : (a -> b -> b) -> b -> List a -> b
---insert : (Instruction -> (Cursor, List Instruction) -> (Cursor, List Instruction)) -> (Cursor, List Instruction) -> List Instruction -> (Cursor, List Instruction)
---insert : Instruction -> (Cursor, List Instruction) -> (Cursor, List Instruction)
+--insert : (Instr -> (Cursor, List Instr) -> (Cursor, List Instr)) -> (Cursor, List Instr) -> List Instr -> (Cursor, List Instr)
+--insert : Instr -> (Cursor, List Instr) -> (Cursor, List Instr)
 --insert instr (cursor, ast) =
 --case instr of
 --Fun _  _ children -> (cursor, ast)
@@ -58,11 +58,11 @@ applyFirst f ( x, y ) =
     ( f x, y )
 
 
-insert : Instruction -> Cursor -> Cursor -> List Instruction -> ( List Instruction, Cursor )
+insert : Instr -> Cursor -> Cursor -> List Instr -> ( List Instr, Cursor )
 insert instr cursor line ast =
     if cursor == line then
         ( instr :: ast, line + 1 )
-        -- @TODO change to (Maybe Cursor, List Instruction) so that we can short circuit
+        -- @TODO change to (Maybe Cursor, List Instr) so that we can short circuit
 
     else
         case ast of
@@ -71,7 +71,7 @@ insert instr cursor line ast =
 
             i :: is ->
                 let
-                    innerInsert : List Instruction -> ( List Instruction, Cursor )
+                    innerInsert : List Instr -> ( List Instr, Cursor )
                     innerInsert =
                         insert instr cursor (line + 1)
                 in
@@ -103,7 +103,7 @@ insert instr cursor line ast =
 --- Abstract Syntax Tree
 
 
-type Instruction
+type Instr
     = EmptyLine
     | Add
     | Sub
@@ -145,49 +145,165 @@ type Instruction
     | Write4
 
 
-type Instr
-    = Instr { instr : Instruction, button : String, docs : Docs }
+getMeta : Instr -> { button : String, docs : Docs, class : String }
+getMeta instr =
+    case instr of
+        EmptyLine ->
+            { button = "~", docs = "empty line", class = "empty" }
+
+        Block _ _ _ ->
+            { button = "block", docs = "breaking to block label jumps out of block", class = "control-flow" }
+
+        Loop _ _ _ ->
+            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow" }
+
+        If _ _ _ _ ->
+            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow" }
+
+        Else _ ->
+            { button = "else", docs = "else branch of if statement", class = "control-flow" }
+
+        Add ->
+            { button = "+", docs = "addition", class = "numeric" }
+
+        Sub ->
+            { button = "sub", docs = "subtraction", class = "numeric" }
+
+        Mul ->
+            { button = "mult", docs = "multiplication", class = "numeric" }
+
+        Div ->
+            { button = "div", docs = "division", class = "numeric" }
+
+        Rem ->
+            { button = "%", docs = "remainder", class = "numeric" }
+
+        Gt ->
+            { button = ">", docs = "greater than", class = "numeric" }
+
+        Gte ->
+            { button = "≥", docs = "greater than or equal", class = "numeric" }
+
+        Lt ->
+            { button = "<", docs = "less than", class = "numeric" }
+
+        Lte ->
+            { button = "≤", docs = "less than or equal", class = "numeric" }
+
+        Eq ->
+            { button = "=", docs = "equal", class = "numeric" }
+
+        Neq ->
+            { button = "≠", docs = "not equal", class = "numeric" }
+
+        And ->
+            { button = "and", docs = "bitwise/logical and", class = "numeric" }
+
+        Or ->
+            { button = "or", docs = "bitwise/logical or", class = "numeric" }
+
+        Xor ->
+            { button = "xor", docs = "bitwise/logical xor", class = "numeric" }
+
+        Rsh ->
+            { button = "»", docs = "bitwise right shift", class = "numeric" }
+
+        Lsh ->
+            { button = "«", docs = "bitwise left shift", class = "numeric" }
+
+        Num _ ->
+            { button = "num", docs = "constant number", class = "numeric" }
+
+        Fun _ _ _ ->
+            { button = "f(x)", docs = "function definition", class = "function" }
+
+        Let _ ->
+            { button = "let", docs = "local variable declaration", class = "variable" }
+
+        Set _ ->
+            { button = "set", docs = "set local variable", class = "variable" }
+
+        Get _ ->
+            { button = "get", docs = "get local variable", class = "variable" }
+
+        Br _ ->
+            { button = "br", docs = "break to label", class = "control-flow" }
+
+        BrIf _ ->
+            { button = "br_if", docs = "if truthy break to label", class = "control-flow" }
+
+        Return ->
+            { button = "return", docs = "return function", class = "control-flow" }
+
+        Call _ ->
+            { button = "call", docs = "call function", class = "control-flow" }
+
+        Nop ->
+            { button = "nop", docs = "no operation", class = "control-flow" }
+
+        Drop ->
+            { button = "drop", docs = "drop top of stack", class = "control-flow" }
+
+        Malloc ->
+            { button = "malloc", docs = "allocate n bytes", class = "memory" }
+
+        Read1 ->
+            { button = "read1", docs = "read 1 bytee", class = "memory" }
+
+        Read2 ->
+            { button = "read2", docs = "read 2 bytes", class = "memory" }
+
+        Read4 ->
+            { button = "read4", docs = "read 4 bytes", class = "memory" }
+
+        Write1 ->
+            { button = "write1", docs = "write 1 byte", class = "memory" }
+
+        Write2 ->
+            { button = "write2", docs = "write 2 bytes", class = "memory" }
+
+        Write4 ->
+            { button = "write4", docs = "write 4 bytes", class = "memory" }
 
 
 instructions : List Instr
 instructions =
-    [ Instr { instr = Add, button = "+", docs = "addition" }
-    , Instr { instr = Block "" [] [], button = "block", docs = "breaking to block label jumps out of block" }
-    , Instr { instr = Loop "" [] [], button = "loop", docs = "breaking to loop label jumps to top of loop" }
-    , Instr { instr = If "" [] [] [], button = "if", docs = "breaking to if label jumps out of if" }
-    , Instr { instr = Else [], button = "else", docs = "else branch of if statement" }
-    , Instr { instr = Add, button = "+", docs = "addition" }
-    , Instr { instr = Sub, button = "sub", docs = "subtraction" }
-    , Instr { instr = Mul, button = "mult", docs = "multiplication" }
-    , Instr { instr = Div, button = "div", docs = "division" }
-    , Instr { instr = Rem, button = "%", docs = "remainder" }
-    , Instr { instr = Gt, button = ">", docs = "greater than" }
-    , Instr { instr = Gte, button = "≥", docs = "greater than or equal" }
-    , Instr { instr = Lt, button = "<", docs = "less than" }
-    , Instr { instr = Lte, button = "≤", docs = "less than or equal" }
-    , Instr { instr = Eq, button = "=", docs = "equal" }
-    , Instr { instr = Neq, button = "≠", docs = "not equal" }
-    , Instr { instr = And, button = "and", docs = "bitwise/logical and" }
-    , Instr { instr = Or, button = "or", docs = "bitwise/logical or" }
-    , Instr { instr = Xor, button = "xor", docs = "bitwise/logical xor" }
-    , Instr { instr = Rsh, button = "»", docs = "bitwise right shift" }
-    , Instr { instr = Lsh, button = "«", docs = "bitwise left shift" }
-    , Instr { instr = Num 0, button = "num", docs = "constant number" }
-    , Instr { instr = Fun "" (Sig [] []) [], button = "f(x)", docs = "function definition" }
-    , Instr { instr = Let "", button = "let", docs = "local variable declaration" }
-    , Instr { instr = Set "", button = "set", docs = "set local variable" }
-    , Instr { instr = Get "", button = "get", docs = "get local variable" }
-    , Instr { instr = Br "", button = "br", docs = "break to label" }
-    , Instr { instr = BrIf "", button = "br_if", docs = "if truthy break to label" }
-    , Instr { instr = Return, button = "return", docs = "return function" }
-    , Instr { instr = Call "", button = "call", docs = "call function" }
-    , Instr { instr = Nop, button = "nop", docs = "no operation" }
-    , Instr { instr = Drop, button = "drop", docs = "drop top of stack" }
-    , Instr { instr = Malloc, button = "malloc", docs = "allocate n bytes" }
-    , Instr { instr = Read1, button = "read1", docs = "read 1 bytee" }
-    , Instr { instr = Read2, button = "read2", docs = "read 2 bytes" }
-    , Instr { instr = Read4, button = "read4", docs = "read 4 bytes" }
-    , Instr { instr = Write1, button = "write1", docs = "write 1 byte" }
-    , Instr { instr = Write2, button = "write2", docs = "write 2 bytes" }
-    , Instr { instr = Write4, button = "write4", docs = "write 4 bytes" }
+    [ Add
+    , Sub
+    , Mul
+    , Div
+    , Rem
+    , Gt
+    , Gte
+    , Lt
+    , Lte
+    , Eq
+    , Neq
+    , And
+    , Or
+    , Xor
+    , Rsh
+    , Lsh
+    , Num 0
+    , Fun "" (Sig [] []) []
+    , Let ""
+    , Set ""
+    , Get ""
+    , Block "" [] []
+    , Loop "" [] []
+    , If "" [] [] []
+    , Else []
+    , Br ""
+    , BrIf ""
+    , Return
+    , Call ""
+    , Nop
+    , Drop
+    , Malloc
+    , Read1
+    , Read2
+    , Read4
+    , Write1
+    , Write2
+    , Write4
     ]

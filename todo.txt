@@ -1,0 +1,7 @@
+- listing the instructions is currently flat
+- we need it to nest
+- make the following operations work
+  * insertion
+  * deletion
+  * move
+  * alter label
