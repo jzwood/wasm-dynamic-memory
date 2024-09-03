@@ -20,16 +20,13 @@ main =
 -- MODEL
 
 
-type Module
-    = Module Children
-
-
 type alias Model =
-    { ast : List Instruction, cursor : Maybe Int }
+    { ast : List Instruction, cursor : Maybe Cursor }
 
 
 type Msg
-    = SetCursor (Maybe Int)
+    = SetCursor (Maybe Cursor)
+    | InsertInstruction Instruction Cursor
     | Nop
 
 
@@ -47,6 +44,9 @@ update msg model =
     case msg of
         SetCursor c ->
             { model | cursor = c }
+
+        InsertInstruction i c ->
+            model
 
         Nop ->
             model
@@ -72,14 +72,14 @@ onDragOver =
     preventDefaultOn "dragover" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
 
 
-onDrop : Attribute Msg
-onDrop =
-    preventDefaultOn "drop" (Decode.map alwaysPreventDefault (Decode.succeed (SetCursor (Just 9000))))
+onDrop : Instruction -> Cursor -> Attribute Msg
+onDrop instr cursor =
+    preventDefaultOn "drop" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstruction instr cursor)))
 
 
 onDragEnd : Attribute Msg
 onDragEnd =
-    on "dragleave" (Decode.succeed (SetCursor Nothing))
+    on "dragend" (Decode.succeed (SetCursor Nothing))
 
 
 
@@ -91,13 +91,11 @@ view { ast, cursor } =
     div []
         [ section [ id "code" ]
             (List.indexedMap
-                (\i x ->
+                (\i instr ->
                     div
                         [ onDragEnter (SetCursor (Just i))
                         , onDragOver
-                        , onDrop
-
-                        --, onDragEnd
+                        , onDrop instr i
                         , class "line"
                         , class
                             (if Just i == cursor then

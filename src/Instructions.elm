@@ -11,6 +11,10 @@ type Type
     | Bool
 
 
+type alias Cursor =
+    Int
+
+
 type alias Result =
     List Type
 
@@ -33,6 +37,51 @@ type alias Children =
 
 type Signature
     = Sig (List Type) Result
+
+
+
+-- foldl : (a -> b -> b) -> b -> List a -> b
+--insert : (Instruction -> (Cursor, List Instruction) -> (Cursor, List Instruction)) -> (Cursor, List Instruction) -> List Instruction -> (Cursor, List Instruction)
+--insert : Instruction -> (Cursor, List Instruction) -> (Cursor, List Instruction)
+--insert instr (cursor, ast) =
+--case instr of
+--Fun _  _ children -> (cursor, ast)
+--Block _ _ children -> (cursor, ast)
+--Loop _ _ children -> (cursor, ast)
+--If _ _ children children -> (cursor, ast)
+--Else children -> (cursor, ast)
+--op -> (cursor, ast)
+
+
+insert : Instruction -> Cursor -> Cursor -> List Instruction -> List Instruction
+insert instr cursor line ast =
+    case ast of
+        [] ->
+            ast
+
+        i :: is ->
+            case i of
+                Fun _ _ children ->
+                    ast
+
+                Block _ _ children ->
+                    ast
+
+                Loop _ _ children ->
+                    ast
+
+                If _ _ consequent alternative ->
+                    ast
+
+                Else children ->
+                    ast
+
+                op ->
+                    if cursor == line then
+                        instr :: ast
+
+                    else
+                        i :: insert instr cursor (line + 1) is
 
 
 
