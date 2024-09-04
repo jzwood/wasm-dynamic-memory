@@ -6,6 +6,7 @@ import Html.Attributes exposing (class, draggable, id, style)
 import Html.Events exposing (on, onClick, preventDefaultOn)
 import Instructions exposing (..)
 import Json.Decode as Decode
+import List.Extra exposing (mapAccuml)
 
 
 
@@ -103,37 +104,85 @@ onDragEnd =
 -- VIEW
 
 
+astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
+astToHtml cursor ast =
+    List.indexedMap
+        (\i instr ->
+            let
+                meta =
+                    getMeta instr
+            in
+            div
+                [ onDragEnter (SetCursor (Just i))
+                , onDragOver
+                , onDrop i
+                , class "line"
+                , class meta.class
+                , class
+                    (if cursor == Just i then
+                        "cursor"
+
+                     else
+                        ""
+                    )
+                ]
+                [ meta.button |> text ]
+        )
+        ast
+
+
+instrsToHtml : Maybe Cursor -> Cursor -> List Instr -> ( ( Maybe Cursor, Cursor ), List (Html Msg) )
+instrsToHtml cursor line instrs =
+    mapAccuml instrToHtml ( cursor, line ) instrs
+
+
+instrToHtml : ( Maybe Cursor, Cursor ) -> Instr -> ( ( Maybe Cursor, Cursor ), Html Msg )
+instrToHtml ( cursor, line ) instr =
+    let
+        meta =
+            getMeta instr
+
+        lineClass =
+            if cursor == Just line then
+                "line cursor"
+
+            else
+                "line"
+
+        lineNode : List String -> Html Msg
+        lineNode labels =
+            div [ class lineClass ] [ meta.button :: labels |> String.join " " |> text ]
+    in
+    case instr of
+        Fun n s children ->
+            let
+                ( ( _, nextLine ), nodes ) =
+                    instrsToHtml cursor line children
+            in
+            ( ( cursor, nextLine ), div [ class "function" ] (lineNode [ n ] :: nodes) )
+
+        --Block l r children ->
+        --applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
+        --Loop l r children ->
+        --applyFirst (\nextChildren -> Loop l r nextChildren :: is) (innerInsert children)
+        --If l r consequent alternative ->
+        --let
+        --( nextConsequent, nextLine ) =
+        --innerInsert consequent
+        --( nextAlternative, nextNextLine ) =
+        --insert instr cursor nextLine alternative
+        --in
+        --( If l r nextConsequent nextAlternative :: is, nextNextLine )
+        op ->
+            ( ( cursor, line + 1 ), lineNode [] )
+
+
 view : Model -> Html Msg
 view { ast, cursor, message } =
     div []
-        [ section [ id "code" ]
-            (List.indexedMap
-                (\i instr ->
-                    let
-                        meta =
-                            getMeta instr
-                    in
-                    div
-                        [ onDragEnter (SetCursor (Just i))
-                        , onDragOver
-                        , onDrop i
-                        , class "line"
-                        , class meta.class
-                        , class
-                            (if cursor == Just i then
-                                "cursor"
-
-                             else
-                                ""
-                            )
-                        ]
-                        [ meta.button |> text ]
-                )
-                ast
-            )
+        [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
-        , section [ id "instructions" ]
-            (toHtml instructions)
+        , section [ id "instructions" ] (toHtml instructions)
         ]
 
 

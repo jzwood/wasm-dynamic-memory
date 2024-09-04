@@ -129,7 +129,7 @@ type Instr
     | Block Label Result Children
     | Loop Label Result Children
     | If Label Result Children Children
-    | Else Children
+    | Else
     | Br Label
     | BrIf Label
     | Return
@@ -160,7 +160,7 @@ getMeta instr =
         If _ _ _ _ ->
             { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow" }
 
-        Else _ ->
+        Else ->
             { button = "else", docs = "else branch of if statement", class = "control-flow" }
 
         Add ->
@@ -285,14 +285,14 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "" (Sig [] []) []
+    , Fun "" (Sig [] []) [ EmptyLine ]
     , Let ""
     , Set ""
     , Get ""
-    , Block "" [] []
-    , Loop "" [] []
-    , If "" [] [] []
-    , Else []
+    , Block "" [] [ EmptyLine ]
+    , Loop "" [] [ EmptyLine ]
+    , If "" [] [ EmptyLine ] []
+    , Else
     , Br ""
     , BrIf ""
     , Return
