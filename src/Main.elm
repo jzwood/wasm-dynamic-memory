@@ -106,29 +106,7 @@ onDragEnd =
 
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
-    List.indexedMap
-        (\i instr ->
-            let
-                meta =
-                    getMeta instr
-            in
-            div
-                [ onDragEnter (SetCursor (Just i))
-                , onDragOver
-                , onDrop i
-                , class "line"
-                , class meta.class
-                , class
-                    (if cursor == Just i then
-                        "cursor"
-
-                     else
-                        ""
-                    )
-                ]
-                [ meta.button |> text ]
-        )
-        ast
+    instrsToHtml cursor 0 ast |> Tuple.second
 
 
 instrsToHtml : Maybe Cursor -> Cursor -> List Instr -> ( ( Maybe Cursor, Cursor ), List (Html Msg) )
@@ -151,7 +129,14 @@ instrToHtml ( cursor, line ) instr =
 
         lineNode : List String -> Html Msg
         lineNode labels =
-            div [ class lineClass ] [ meta.button :: labels |> String.join " " |> text ]
+            div
+                [ onDragEnter (SetCursor (Just line))
+                , onDragOver
+                , onDrop line
+                , class lineClass
+                , class meta.class
+                ]
+                [ meta.button :: labels |> String.join " " |> text ]
     in
     case instr of
         Fun n s children ->
@@ -159,7 +144,7 @@ instrToHtml ( cursor, line ) instr =
                 ( ( _, nextLine ), nodes ) =
                     instrsToHtml cursor line children
             in
-            ( ( cursor, nextLine ), div [ class "function" ] (lineNode [ n ] :: nodes) )
+            ( ( cursor, nextLine ), div [ class "parent" ] (lineNode [ n ] :: nodes) )
 
         --Block l r children ->
         --applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
