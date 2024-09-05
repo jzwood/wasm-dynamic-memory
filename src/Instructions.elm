@@ -39,70 +39,6 @@ type Signature
     = Sig (List Type) Result
 
 
-
--- foldl : (a -> b -> b) -> b -> List a -> b
---insert : (Instr -> (Cursor, List Instr) -> (Cursor, List Instr)) -> (Cursor, List Instr) -> List Instr -> (Cursor, List Instr)
---insert : Instr -> (Cursor, List Instr) -> (Cursor, List Instr)
---insert instr (cursor, ast) =
---case instr of
---Fun _  _ children -> (cursor, ast)
---Block _ _ children -> (cursor, ast)
---Loop _ _ children -> (cursor, ast)
---If _ _ children children -> (cursor, ast)
---Else children -> (cursor, ast)
---op -> (cursor, ast)
-
-
-applyFirst : (a -> b) -> ( a, c ) -> ( b, c )
-applyFirst f ( x, y ) =
-    ( f x, y )
-
-
-insert : Instr -> Cursor -> Cursor -> Children -> ( Children, Cursor )
-insert instr cursor line ast =
-    if cursor == line then
-        ( instr :: ast, line + 1 )
-        -- @TODO change to (Maybe Cursor, List Instr) so that we can short circuit
-
-    else
-        case ast of
-            [] ->
-                ( ast, line + 1 )
-
-            i :: is ->
-                let
-                    innerInsert : List Instr -> ( List Instr, Cursor )
-                    innerInsert =
-                        insert instr cursor (line + 1)
-                in
-                case i of
-                    Fun n s children ->
-                        applyFirst (\nextChildren -> Fun n s nextChildren :: is) (innerInsert children)
-
-                    Block l r children ->
-                        applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
-
-                    Loop l r children ->
-                        applyFirst (\nextChildren -> Loop l r nextChildren :: is) (innerInsert children)
-
-                    If l r consequent alternative ->
-                        let
-                            ( nextConsequent, nextLine ) =
-                                innerInsert consequent
-
-                            ( nextAlternative, nextNextLine ) =
-                                insert instr cursor nextLine alternative
-                        in
-                        ( If l r nextConsequent nextAlternative :: is, nextNextLine )
-
-                    op ->
-                        applyFirst ((::) i) (insert instr cursor (line + 1) is)
-
-
-
---- Abstract Syntax Tree
-
-
 type Instr
     = EmptyLine
     | Add
@@ -122,14 +58,15 @@ type Instr
     | Rsh
     | Lsh
     | Num Int
-    | Fun Variable Signature Children
+    | Fun Variable Signature
     | Let Variable
     | Set Variable
     | Get Variable
-    | Block Label Result Children
-    | Loop Label Result Children
-    | If Label Result Children Children
+    | Block Label Result
+    | Loop Label Result
+    | If Label Result
     | Else
+    | End
     | Br Label
     | BrIf Label
     | Return
@@ -151,14 +88,17 @@ getMeta instr =
         EmptyLine ->
             { button = "~", docs = "empty line", class = "empty" }
 
-        Block _ _ _ ->
+        Block _ _ ->
             { button = "block", docs = "breaking to block label jumps out of block", class = "control-flow" }
 
-        Loop _ _ _ ->
+        Loop _ _ ->
             { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow" }
 
-        If _ _ _ _ ->
+        If _ _ ->
             { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow" }
+
+        End ->
+            { button = "end", docs = "end of function, block, loop, or if", class = "control-flow" }
 
         Else ->
             { button = "else", docs = "else branch of if statement", class = "control-flow" }
@@ -214,8 +154,8 @@ getMeta instr =
         Num _ ->
             { button = "num", docs = "constant number", class = "numeric" }
 
-        Fun _ _ _ ->
-            { button = "f(x)", docs = "function definition", class = "function" }
+        Fun _ _ ->
+            { button = "fun", docs = "function definition", class = "function" }
 
         Let _ ->
             { button = "let", docs = "local variable declaration", class = "variable" }
@@ -285,14 +225,15 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "" (Sig [] []) [ EmptyLine ]
+    , Fun "" (Sig [] [])
     , Let ""
     , Set ""
     , Get ""
-    , Block "" [] [ EmptyLine ]
-    , Loop "" [] [ EmptyLine ]
-    , If "" [] [ EmptyLine ] []
+    , Block "" []
+    , Loop "" []
+    , If "" []
     , Else
+    , End
     , Br ""
     , BrIf ""
     , Return

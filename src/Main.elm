@@ -7,6 +7,7 @@ import Html.Events exposing (on, onClick, preventDefaultOn)
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml)
+import Utils exposing (..)
 
 
 
@@ -34,7 +35,7 @@ type Msg
 
 init : Model
 init =
-    { ast = List.repeat 30 EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
+    { ast = List.repeat 20 EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
 
 
 
@@ -44,7 +45,7 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     let
-        { cursor, instr } =
+        { cursor, instr, ast } =
             model
     in
     case msg of
@@ -52,11 +53,7 @@ update msg model =
             { model | cursor = c, message = Maybe.withDefault 0 cursor |> String.fromInt }
 
         InsertInstr c ->
-            let
-                ( ast, c2 ) =
-                    insert instr c 0 model.ast
-            in
-            { model | ast = ast, cursor = Nothing, message = (getMeta instr).button }
+            { model | ast = insert instr c ast, cursor = Nothing, message = (getMeta instr).button }
 
         SetDragging i ->
             { model | cursor = Nothing, instr = i }
@@ -106,66 +103,42 @@ onDragEnd =
 
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
-    instrsToHtml cursor 0 ast |> Tuple.second
-
-
-instrsToHtml : Maybe Cursor -> Cursor -> List Instr -> ( ( Maybe Cursor, Cursor ), List (Html Msg) )
-instrsToHtml cursor line instrs =
-    mapAccuml instrToHtml ( cursor, line ) instrs
-
-
-instrToHtml : ( Maybe Cursor, Cursor ) -> Instr -> ( ( Maybe Cursor, Cursor ), Html Msg )
-instrToHtml ( cursor, line ) instr =
-    let
-        meta =
-            getMeta instr
-
-        lineClass =
-            if cursor == Just line then
-                "line cursor"
-
-            else
-                "line"
-
-        lineNode : List String -> Html Msg
-        lineNode labels =
-            div
-                [ onDragEnter (SetCursor (Just line))
-                , onDragOver
-                , onDrop line
-                , class lineClass
-                , class meta.class
-                ]
-                [ meta.button :: labels |> String.join " " |> text ]
-
-        childrenNodes : Children -> List String -> ( ( Maybe Cursor, Cursor ), Html Msg )
-        childrenNodes children labels =
+    List.indexedMap
+        (\i instr ->
             let
-                ( ( _, nextLine ), nodes ) =
-                    instrsToHtml cursor (line + 1) children
+                meta =
+                    getMeta instr
             in
-            ( ( cursor, nextLine ), div [ class "parent" ] (lineNode labels :: nodes) )
-    in
-    case instr of
-        Fun n s children ->
-            childrenNodes children [ n ]
+            div
+                [ onDragEnter (SetCursor (Just i))
+                , onDragOver
+                , onDrop i
+                , class "line"
+                , class meta.class
+                , class
+                    (if cursor == Just i then
+                        "cursor"
 
-        Block l r children ->
-            childrenNodes children [ l ]
+                     else
+                        ""
+                    )
+                ]
+                [ meta.button |> text ]
+        )
+        ast
 
-        Loop l r children ->
-            childrenNodes children [ l ]
 
-        --If l r consequent alternative ->
-        --let
-        --( nextConsequent, nextLine ) =
-        --innerInsert consequent
-        --( nextAlternative, nextNextLine ) =
-        --insert instr cursor nextLine alternative
-        --in
-        --( If l r nextConsequent nextAlternative :: is, nextNextLine )
-        op ->
-            ( ( cursor, line + 1 ), lineNode [] )
+
+-- ((Maybe Cursor, Indent) -> Instr -> ((Maybe Cursor, Indent), Html Msg )) -> (Maybe Cursor, Indent) -> List Instr -> ((Maybe Cursor, Indent), List (Html Msg) )
+
+
+astToHtml2 : Maybe Cursor -> List Instr -> List (Html Msg)
+astToHtml2 cursor ast =
+    List.Extra.mapAccuml
+        (\( c, i ) instr -> ( ( Nothing, 0 ), text "" ))
+        ( cursor, 0 )
+        ast
+        |> Tuple.second
 
 
 view : Model -> Html Msg
