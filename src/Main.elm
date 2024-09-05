@@ -135,8 +135,33 @@ astToHtml cursor ast =
 astToHtml2 : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml2 cursor ast =
     List.Extra.mapAccuml
-        (\( c, i ) instr -> ( ( Nothing, 0 ), text "" ))
-        ( cursor, 0 )
+        (\( c, line, indent ) instr ->
+            let
+                meta =
+                    getMeta instr
+
+                nextLine =
+                    line + 1
+
+                lineClass =
+                    if cursor == Just line then
+                        "line cursor"
+
+                    else
+                        "line"
+            in
+            ( ( c, line + 1, 0 )
+            , div
+                [ onDragEnter (SetCursor (Just line))
+                , onDragOver
+                , onDrop line
+                , class lineClass
+                , class meta.class
+                ]
+                [ meta.button |> text ]
+            )
+        )
+        ( cursor, 0, 0 )
         ast
         |> Tuple.second
 
