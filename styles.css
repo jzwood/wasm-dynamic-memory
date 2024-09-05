@@ -87,11 +87,6 @@ main {
   list-style: none;
 }
 
-.line:first {
-  margin-left: 10px;
-  counter-reset: line;
-}
-
 .line::before {
   content: counter(line);
   display: inline-block;

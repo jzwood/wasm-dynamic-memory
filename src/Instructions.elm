@@ -58,7 +58,7 @@ applyFirst f ( x, y ) =
     ( f x, y )
 
 
-insert : Instr -> Cursor -> Cursor -> List Instr -> ( List Instr, Cursor )
+insert : Instr -> Cursor -> Cursor -> Children -> ( Children, Cursor )
 insert instr cursor line ast =
     if cursor == line then
         ( instr :: ast, line + 1 )
@@ -67,7 +67,7 @@ insert instr cursor line ast =
     else
         case ast of
             [] ->
-                ( ast, line )
+                ( ast, line + 1 )
 
             i :: is ->
                 let

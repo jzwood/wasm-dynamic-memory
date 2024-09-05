@@ -137,19 +137,25 @@ instrToHtml ( cursor, line ) instr =
                 , class meta.class
                 ]
                 [ meta.button :: labels |> String.join " " |> text ]
+
+        childrenNodes : Children -> List String -> ( ( Maybe Cursor, Cursor ), Html Msg )
+        childrenNodes children labels =
+            let
+                ( ( _, nextLine ), nodes ) =
+                    instrsToHtml cursor (line + 1) children
+            in
+            ( ( cursor, nextLine ), div [ class "parent" ] (lineNode labels :: nodes) )
     in
     case instr of
         Fun n s children ->
-            let
-                ( ( _, nextLine ), nodes ) =
-                    instrsToHtml cursor line children
-            in
-            ( ( cursor, nextLine ), div [ class "parent" ] (lineNode [ n ] :: nodes) )
+            childrenNodes children [ n ]
 
-        --Block l r children ->
-        --applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
-        --Loop l r children ->
-        --applyFirst (\nextChildren -> Loop l r nextChildren :: is) (innerInsert children)
+        Block l r children ->
+            childrenNodes children [ l ]
+
+        Loop l r children ->
+            childrenNodes children [ l ]
+
         --If l r consequent alternative ->
         --let
         --( nextConsequent, nextLine ) =
