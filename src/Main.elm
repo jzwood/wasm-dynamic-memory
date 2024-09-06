@@ -108,22 +108,26 @@ astToHtml cursor ast =
             let
                 meta =
                     getMeta instr
-            in
-            div
-                [ onDragEnter (SetCursor (Just i))
-                , onDragOver
-                , onDrop i
-                , class "line"
-                , class meta.class
-                , class
-                    (if cursor == Just i then
-                        "cursor"
 
-                     else
-                        ""
-                    )
-                ]
-                [ meta.button |> text ]
+                attrs =
+                    [ onDragEnter (SetCursor (Just i))
+                    , onDragOver
+                    , onDrop i
+                    , class "line"
+                    , class meta.class
+                    , class
+                        (if cursor == Just i then
+                            "cursor"
+
+                         else
+                            ""
+                        )
+                    ]
+
+                innerHtml =
+                    [ meta.button |> text ]
+            in
+            div attrs innerHtml
         )
         ast
 
@@ -143,23 +147,35 @@ astToHtml2 cursor ast =
                 nextLine =
                     line + 1
 
-                lineClass =
-                    if cursor == Just line then
-                        "line cursor"
+                attrs =
+                    [ onDragEnter (SetCursor (Just line))
+                    , onDragOver
+                    , onDrop line
+                    , class "line"
+                    , class
+                        (if cursor == Just line then
+                            "cursor"
 
-                    else
-                        "line"
+                         else
+                            ""
+                        )
+                    , class meta.class
+                    ]
+
+                result attribs =
+                    ( ( c, line + 1, 0 ), div attribs [ meta.button |> text ] )
             in
-            ( ( c, line + 1, 0 )
-            , div
-                [ onDragEnter (SetCursor (Just line))
-                , onDragOver
-                , onDrop line
-                , class lineClass
-                , class meta.class
-                ]
-                [ meta.button |> text ]
-            )
+            result
+                (case instr of
+                    Block _ _ ->
+                        attrs
+
+                    End ->
+                        attrs
+
+                    op ->
+                        attrs
+                )
         )
         ( cursor, 0, 0 )
         ast
