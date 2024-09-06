@@ -67,7 +67,7 @@ insert instr cursor line ast =
     else
         case ast of
             [] ->
-                ( ast, line + 1 )
+                ( ast, line )
 
             i :: is ->
                 let
@@ -77,10 +77,24 @@ insert instr cursor line ast =
                 in
                 case i of
                     Fun n s children ->
-                        applyFirst (\nextChildren -> Fun n s nextChildren :: is) (innerInsert children)
+                        let
+                            ( funChildren, nextCursor ) =
+                                innerInsert children
+
+                            ( nextChildren, nextNextCursor ) =
+                                insert instr cursor nextCursor is
+                        in
+                        ( Fun n s funChildren :: nextChildren, nextNextCursor )
 
                     Block l r children ->
-                        applyFirst (\nextChildren -> Block l r nextChildren :: is) (innerInsert children)
+                        let
+                            ( blockChildren, nextCursor ) =
+                                innerInsert children
+
+                            ( nextChildren, nextNextCursor ) =
+                                insert instr cursor nextCursor is
+                        in
+                        ( Block l r blockChildren :: nextChildren, nextNextCursor )
 
                     Loop l r children ->
                         applyFirst (\nextChildren -> Loop l r nextChildren :: is) (innerInsert children)
@@ -285,11 +299,11 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "" (Sig [] []) [ EmptyLine ]
+    , Fun "" (Sig [] []) []
     , Let ""
     , Set ""
     , Get ""
-    , Block "" [] [ EmptyLine ]
+    , Block "" [] []
     , Loop "" [] [ EmptyLine ]
     , If "" [] [ EmptyLine ] []
     , Else
