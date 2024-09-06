@@ -21,7 +21,7 @@ body {
 }
 
 body {
-  background-color: #262627; //  #333333;
+  background-color: #232323;
   color: ivory;
 }
 
@@ -30,9 +30,6 @@ main {
   max-width: 520px;
   margin: 0 auto;
   border: none;
-  /*border-width: 0 2px;*/
-  /*border-color: #4E4D4E;*/
-  /*border-style: solid;*/
 }
 
 #code {
@@ -64,12 +61,10 @@ main {
 }
 
 .instr {
-  /*background-color: #555;*/
   background-color: #3c3c3c;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   height: 1.75rem;
-  /*border: 1px solid red;*/
 }
 
 .instr:hover {
@@ -112,4 +107,44 @@ main {
   border-radius: 5px;
   padding-left: 0.5rem;
   padding-right: 0.3rem;
+}
+
+
+.numeric {
+  color: ivory;
+}
+.numeric-border {
+  border: 1px solid #777777;
+}
+
+.control-flow {
+  color: #EE84E4;
+}
+
+.control-flow-border {
+  border: 1px solid #EE84e4;
+}
+
+.memory {
+  color: #AC86FF;
+}
+
+.memory-border {
+  border: 1px solid #AC86FF;
+}
+
+.variable {
+  color: #86BDF9;
+}
+
+.variable-border {
+  border: 1px solid #86BDF9;
+}
+
+.function {
+  background-color: #333333;
+}
+
+.function-border {
+  border: 1px solid #FFFFFF;
 }

@@ -10,6 +10,10 @@ import List.Extra exposing (mapAccuml)
 import Utils exposing (..)
 
 
+init_rows =
+    30
+
+
 
 -- MAIN
 
@@ -35,7 +39,7 @@ type Msg
 
 init : Model
 init =
-    { ast = List.repeat 20 EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
+    { ast = List.repeat init_rows EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
 
 
 
@@ -50,13 +54,17 @@ update msg model =
     in
     case msg of
         SetCursor c ->
-            { model | cursor = c, message = Maybe.withDefault 0 cursor |> String.fromInt }
+            { model | cursor = c }
 
         InsertInstr c ->
-            { model | ast = insert instr c ast, cursor = Nothing, message = (getMeta instr).button }
+            { model | ast = insert instr c ast, cursor = Nothing }
 
         SetDragging i ->
-            { model | cursor = Nothing, instr = i }
+            let
+                meta =
+                    getMeta instr
+            in
+            { model | cursor = Nothing, instr = i, message = meta.button ++ ": " ++ meta.docs }
 
         Nop ->
             model
@@ -99,41 +107,6 @@ onDragEnd =
 
 
 -- VIEW
-
-
-astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
-astToHtml cursor ast =
-    List.indexedMap
-        (\i instr ->
-            let
-                meta =
-                    getMeta instr
-
-                attrs =
-                    [ onDragEnter (SetCursor (Just i))
-                    , onDragOver
-                    , onDrop i
-                    , class "line"
-                    , class meta.class
-                    , class
-                        (if cursor == Just i then
-                            "cursor"
-
-                         else
-                            ""
-                        )
-                    ]
-
-                innerHtml =
-                    [ meta.button |> text ]
-            in
-            div attrs innerHtml
-        )
-        ast
-
-
-
--- ((Maybe Cursor, Indent) -> Instr -> ((Maybe Cursor, Indent), Html Msg )) -> (Maybe Cursor, Indent) -> List Instr -> ((Maybe Cursor, Indent), List (Html Msg) )
 
 
 astToHtml2 : Maybe Cursor -> List Instr -> List (Html Msg)
@@ -198,11 +171,12 @@ view { ast, cursor, message } =
 
 toHtml : List Instr -> List (Html Msg)
 toHtml ins =
-    List.map (\instr -> div [ class "instr", draggable "true", onDragStart instr ] [ (getMeta instr).button |> text ]) ins
-
-
-
---ins
---|> groupWhile (\(Instr a) (Instr b) -> a.category == b.category)
---|> List.concatMap
---(\( i0, is ) -> List.map (\(Instr i) -> div [ class "op", draggable "true" ] [ text i.show ]) (i0 :: is))
+    List.map
+        (\instr ->
+            let
+                meta =
+                    getMeta instr
+            in
+            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart instr ] [ meta.button |> text ]
+        )
+        ins
