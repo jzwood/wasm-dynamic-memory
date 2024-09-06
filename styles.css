@@ -118,11 +118,11 @@ main {
 }
 
 .control-flow {
-  color: #EE84E4;
+  color: #D673CB;
 }
 
 .control-flow-border {
-  border: 1px solid #EE84e4;
+  border: 1px solid #D673CB;
 }
 
 .memory {
@@ -142,9 +142,10 @@ main {
 }
 
 .function {
+  color: #80e4c9;
   background-color: #333333;
 }
 
 .function-border {
-  border: 1px solid #FFFFFF;
+  border: 1px solid #80e4c9;
 }

@@ -64,7 +64,7 @@ update msg model =
                 meta =
                     getMeta instr
             in
-            { model | cursor = Nothing, instr = i, message = meta.button ++ ": " ++ meta.docs }
+            { model | cursor = Nothing, instr = i, message = String.concat [ "(", meta.button, ") ", meta.docs ] }
 
         Nop ->
             model
@@ -109,8 +109,8 @@ onDragEnd =
 -- VIEW
 
 
-astToHtml2 : Maybe Cursor -> List Instr -> List (Html Msg)
-astToHtml2 cursor ast =
+astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
+astToHtml cursor ast =
     List.Extra.mapAccuml
         (\( c, line, indent ) instr ->
             let
@@ -140,10 +140,22 @@ astToHtml2 cursor ast =
                 body : List (Html Msg)
                 body =
                     [ meta.button |> text ]
+
+                indentedLine =
+                    ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
             in
             case instr of
+                Fun _ _ ->
+                    indentedLine
+
+                Loop _ _ ->
+                    indentedLine
+
+                If _ _ ->
+                    indentedLine
+
                 Block _ _ ->
-                    ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
+                    indentedLine
 
                 End ->
                     let
@@ -163,7 +175,7 @@ astToHtml2 cursor ast =
 view : Model -> Html Msg
 view { ast, cursor, message } =
     div []
-        [ section [ id "code" ] (astToHtml2 cursor ast)
+        [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         ]
