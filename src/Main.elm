@@ -147,10 +147,12 @@ astToHtml2 cursor ast =
                 nextLine =
                     line + 1
 
-                attrs =
+                attrs : Int -> List (Attribute Msg)
+                attrs i =
                     [ onDragEnter (SetCursor (Just line))
                     , onDragOver
                     , onDrop line
+                    , style "margin-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
                         (if cursor == Just line then
@@ -162,20 +164,23 @@ astToHtml2 cursor ast =
                     , class meta.class
                     ]
 
-                result attribs =
-                    ( ( c, line + 1, 0 ), div attribs [ meta.button |> text ] )
+                body : List (Html Msg)
+                body =
+                    [ meta.button |> text ]
             in
-            result
-                (case instr of
-                    Block _ _ ->
-                        attrs
+            case instr of
+                Block _ _ ->
+                    ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
 
-                    End ->
-                        attrs
+                End ->
+                    let
+                        nextIndent =
+                            max 0 (indent - 1)
+                    in
+                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) body )
 
-                    op ->
-                        attrs
-                )
+                op ->
+                    ( ( c, nextLine, indent ), div (attrs indent) body )
         )
         ( cursor, 0, 0 )
         ast
@@ -185,7 +190,7 @@ astToHtml2 cursor ast =
 view : Model -> Html Msg
 view { ast, cursor, message } =
     div []
-        [ section [ id "code" ] (astToHtml cursor ast)
+        [ section [ id "code" ] (astToHtml2 cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         ]
