@@ -1,8 +1,8 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Attribute, Html, aside, button, div, section, text)
-import Html.Attributes exposing (class, draggable, id, style)
+import Html exposing (Attribute, Html, aside, button, div, input, section, text)
+import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, preventDefaultOn)
 import Instructions exposing (..)
 import Json.Decode as Decode
@@ -27,19 +27,19 @@ main =
 
 
 type alias Model =
-    { ast : List Instr, cursor : Maybe Cursor, instr : Instr, message : String }
+    { ast : List Instr, cursor : Maybe Cursor, instr : ( Instr, Maybe Cursor ), message : String }
 
 
 type Msg
     = SetCursor (Maybe Cursor)
     | InsertInstr Cursor
-    | SetDragging Instr
+    | SetDragging Instr (Maybe Cursor)
     | Nop
 
 
 init : Model
 init =
-    { ast = List.repeat init_rows EmptyLine, cursor = Nothing, message = "", instr = EmptyLine }
+    { ast = List.repeat init_rows EmptyLine, cursor = Nothing, message = "", instr = ( EmptyLine, Nothing ) }
 
 
 
@@ -56,15 +56,28 @@ update msg model =
         SetCursor c ->
             { model | cursor = c }
 
-        InsertInstr c ->
-            { model | ast = insert instr c ast, cursor = Nothing }
+        InsertInstr c1 ->
+            case instr of
+                ( i, Nothing ) ->
+                    { model | ast = insert i c1 ast, cursor = Nothing }
 
-        SetDragging i ->
+                ( i, Just c0 ) ->
+                    let
+                        offset =
+                            if c0 < c1 then
+                                -1
+
+                            else
+                                0
+                    in
+                    { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }
+
+        SetDragging i c ->
             let
                 meta =
-                    getMeta instr
+                    instr |> Tuple.first |> getMeta
             in
-            { model | cursor = Nothing, instr = i, message = String.concat [ "(", meta.button, ") ", meta.docs ] }
+            { model | cursor = Nothing, instr = ( i, c ), message = String.concat [ "(", meta.button, ") ", meta.docs ] }
 
         Nop ->
             model
@@ -75,14 +88,14 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
-onDragStart : Instr -> Attribute Msg
-onDragStart instr =
-    on "dragstart" (Decode.succeed (SetDragging instr))
+onDragStart : Msg -> Attribute Msg
+onDragStart msg =
+    on "dragstart" (Decode.succeed msg)
 
 
 onDragEnter : Msg -> Attribute Msg
-onDragEnter message =
-    on "dragenter" (Decode.succeed message)
+onDragEnter msg =
+    on "dragenter" (Decode.succeed msg)
 
 
 onDragLeave : Attribute Msg
@@ -125,6 +138,8 @@ astToHtml cursor ast =
                     [ onDragEnter (SetCursor (Just line))
                     , onDragOver
                     , onDrop line
+                    , onDragStart (SetDragging instr (Just line))
+                    , draggable "true"
                     , style "margin-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
@@ -143,6 +158,9 @@ astToHtml cursor ast =
 
                 indentedLine =
                     ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
+
+                neutralLine =
+                    ( ( c, nextLine, indent ), div (attrs indent) body )
             in
             case instr of
                 Fun _ _ ->
@@ -164,8 +182,21 @@ astToHtml cursor ast =
                     in
                     ( ( c, nextLine, nextIndent ), div (attrs nextIndent) body )
 
+                Num n ->
+                    ( ( c, nextLine, indent )
+                    , div (attrs indent)
+                        [ input
+                            [ value (String.fromInt n)
+                            , style "margin-left" "0.25rem"
+                            , attribute "type" "text"
+                            , style "background-color" "transparent"
+                            ]
+                            []
+                        ]
+                    )
+
                 op ->
-                    ( ( c, nextLine, indent ), div (attrs indent) body )
+                    neutralLine
         )
         ( cursor, 0, 0 )
         ast
@@ -189,6 +220,6 @@ toHtml ins =
                 meta =
                     getMeta instr
             in
-            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart instr ] [ meta.button |> text ]
+            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart (SetDragging instr Nothing) ] [ meta.button |> text ]
         )
         ins
