@@ -14,3 +14,8 @@ remove index list =
 replace : a -> Int -> List a -> List a
 replace x index list =
     List.take index list ++ x :: List.drop (index + 1) list
+
+
+unwords : List String -> String
+unwords =
+    String.join " "

@@ -67,11 +67,11 @@ main {
   height: 1.75rem;
 }
 
-.instr:hover {
+.line:hover, .instr:hover {
   cursor: grab;
 }
 
-.instr:active:hover {
+.line:active:hover, .instr:active:hover {
   cursor: grabbing;
 }
 

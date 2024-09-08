@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Html exposing (Attribute, Html, aside, button, div, input, section, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
-import Html.Events exposing (on, onClick, preventDefaultOn)
+import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml)
@@ -33,6 +33,7 @@ type alias Model =
 type Msg
     = SetCursor (Maybe Cursor)
     | InsertInstr Cursor
+    | UpdateNum Cursor Int
     | SetDragging Instr (Maybe Cursor)
     | Nop
 
@@ -55,6 +56,9 @@ update msg model =
     case msg of
         SetCursor c ->
             { model | cursor = c }
+
+        UpdateNum c n ->
+            { model | ast = replace (Num n) c ast }
 
         InsertInstr c1 ->
             case instr of
@@ -118,6 +122,11 @@ onDragEnd =
     on "dragend" (Decode.succeed (SetCursor Nothing))
 
 
+changeNum : Cursor -> String -> Msg
+changeNum line num =
+    String.filter Char.isDigit num |> String.toInt |> Maybe.withDefault 0 |> UpdateNum line
+
+
 
 -- VIEW
 
@@ -140,7 +149,7 @@ astToHtml cursor ast =
                     , onDrop line
                     , onDragStart (SetDragging instr (Just line))
                     , draggable "true"
-                    , style "margin-left" (String.fromInt (i * 2) ++ "ch")
+                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
                         (if cursor == Just line then
@@ -154,7 +163,19 @@ astToHtml cursor ast =
 
                 body : List (Html Msg)
                 body =
-                    [ meta.button |> text ]
+                    [ case instr of
+                        Block l ca ->
+                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+
+                        Loop l ca ->
+                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+
+                        If l ca ->
+                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+
+                        _ ->
+                            meta.button |> text
+                    ]
 
                 indentedLine =
                     ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
@@ -163,7 +184,7 @@ astToHtml cursor ast =
                     ( ( c, nextLine, indent ), div (attrs indent) body )
             in
             case instr of
-                Fun _ _ ->
+                Fun _ _ _ ->
                     indentedLine
 
                 Loop _ _ ->
@@ -190,6 +211,7 @@ astToHtml cursor ast =
                             , style "margin-left" "0.25rem"
                             , attribute "type" "text"
                             , style "background-color" "transparent"
+                            , onInput (changeNum line)
                             ]
                             []
                         ]

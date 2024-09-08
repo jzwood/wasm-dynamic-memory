@@ -8,9 +8,9 @@
     i32.const 0
     i32.const 0
     i32.const 0
-    block $my_block (result i32)
+    block $1 (result i32)
       i32.const 100
-      br $my_block
+      br $1
     end
     drop
     drop

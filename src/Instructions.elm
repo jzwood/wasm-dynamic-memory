@@ -5,18 +5,16 @@ import Html.Attributes exposing (attribute, class, draggable, id, style)
 import List.Extra exposing (groupWhile)
 
 
-type Type
-    = Integer
-    | Pointer
-    | Bool
-
-
 type alias Cursor =
     Int
 
 
-type alias Result =
-    List Type
+type alias Arity =
+    Int
+
+
+type alias Coarity =
+    Int
 
 
 type alias Label =
@@ -33,10 +31,6 @@ type alias Variable =
 
 type alias Children =
     List Instr
-
-
-type Signature
-    = Sig (List Type) Result
 
 
 type Instr
@@ -58,13 +52,13 @@ type Instr
     | Rsh
     | Lsh
     | Num Int
-    | Fun Variable Signature
+    | Fun Variable Arity Coarity
     | Let Variable
     | Set Variable
     | Get Variable
-    | Block Label Result
-    | Loop Label Result
-    | If Label Result
+    | Block Label Coarity
+    | Loop Label Coarity
+    | If Label Coarity
     | Else
     | End
     | Br Label
@@ -154,7 +148,7 @@ getMeta instr =
         Num _ ->
             { button = "num", docs = "constant number", class = "numeric" }
 
-        Fun _ _ ->
+        Fun _ _ _ ->
             { button = "fun", docs = "function definition", class = "function" }
 
         Let _ ->
@@ -225,19 +219,19 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "" (Sig [] [])
-    , Let ""
-    , Set ""
-    , Get ""
-    , Block "" []
-    , Loop "" []
-    , If "" []
+    , Fun "my_fun" 0 0
+    , Let "var"
+    , Set "var"
+    , Get "var"
+    , Block "bl" 0
+    , Loop "lo" 0
+    , If "if" 0
     , Else
     , End
-    , Br ""
-    , BrIf ""
+    , Br "lo"
+    , BrIf "lo"
     , Return
-    , Call ""
+    , Call "my_fun"
     , Nop
     , Drop
     , Malloc
