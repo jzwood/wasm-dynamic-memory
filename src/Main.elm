@@ -208,7 +208,6 @@ astToHtml cursor ast =
                     , div (attrs indent)
                         [ input
                             [ value (String.fromInt n)
-                            , style "margin-left" "0.25rem"
                             , attribute "type" "text"
                             , style "background-color" "transparent"
                             , onInput (changeNum line)
