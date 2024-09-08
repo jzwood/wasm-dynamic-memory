@@ -79,7 +79,7 @@ update msg model =
         SetDragging i c ->
             let
                 meta =
-                    instr |> Tuple.first |> getMeta
+                    getMeta i
             in
             { model | cursor = Nothing, instr = ( i, c ), message = String.concat [ "(", meta.button, ") ", meta.docs ] }
 
