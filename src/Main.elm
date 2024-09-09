@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Attribute, Html, aside, button, div, input, section, text)
+import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Instructions exposing (..)
@@ -246,11 +246,12 @@ astToHtml cursor ast =
                 Get v ->
                     ( ( c, nextLine, indent )
                     , div (attrs indent)
-                        [ text <| meta.button ++ " $"
+                        [ span [] [ text meta.button ]
+                        , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
                         , input
                             [ value v
+                            , class "input"
                             , attribute "type" "text"
-                            , style "background-color" "transparent"
                             , onInput (UpdateArg1 line)
                             ]
                             []
@@ -262,8 +263,8 @@ astToHtml cursor ast =
                     , div (attrs indent)
                         [ input
                             [ value (String.fromInt n)
+                            , class "input"
                             , attribute "type" "text"
-                            , style "background-color" "transparent"
                             , onInput (UpdateArg1 line)
                             ]
                             []

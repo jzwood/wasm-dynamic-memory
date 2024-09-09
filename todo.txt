@@ -5,3 +5,9 @@
   * deletion
   * move
   * alter label
+
+
+
+EXTRA CREDIT
+  - outcome: input text is selectable/highlightable
+  - track onFocus and onBlur exclusively to toggle draggable={bool}

@@ -18,6 +18,16 @@ body {
   margin: 0;
 }
 
+html {
+  overscroll-behavior: contain;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+
 html, body, input {
   font-size: 1.1rem;
   font-family: "Courier New", Courier, monospace;
@@ -156,8 +166,9 @@ main {
 
 /************* GENERAL *************/
 
-input {
+.input {
   color: ivory;
   outline: none;
   border: none;
+  background-color: transparent;
 }
