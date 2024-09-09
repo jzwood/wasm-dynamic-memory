@@ -52,10 +52,10 @@ type Instr
     | Rsh
     | Lsh
     | Num Int
-    | Fun Variable Arity Coarity
     | Let Variable
     | Set Variable
     | Get Variable
+    | Fun Variable Arity Coarity
     | Block Label Coarity
     | Loop Label Coarity
     | If Label Coarity
@@ -68,6 +68,7 @@ type Instr
     | Nop
     | Drop
     | Malloc
+    | Free
     | Read1
     | Read2
     | Read4
@@ -180,6 +181,9 @@ getMeta instr =
 
         Malloc ->
             { button = "malloc", docs = "allocate n bytes", class = "memory" }
+
+        Free ->
+            { button = "free", docs = "free memory allocated with malloc", class = "memory" }
 
         Read1 ->
             { button = "read1", docs = "read 1 bytee", class = "memory" }

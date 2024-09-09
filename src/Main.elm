@@ -6,7 +6,7 @@ import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Instructions exposing (..)
 import Json.Decode as Decode
-import List.Extra exposing (mapAccuml)
+import List.Extra exposing (mapAccuml, updateAt)
 import Utils exposing (..)
 
 
@@ -33,8 +33,9 @@ type alias Model =
 type Msg
     = SetCursor (Maybe Cursor)
     | InsertInstr Cursor
-    | UpdateNum Cursor Int
-    | SetDragging Instr (Maybe Cursor)
+    | UpdateArg1 Cursor String
+    | UpdateArg2 Cursor String
+    | StartDragging Instr (Maybe Cursor)
     | Nop
 
 
@@ -57,8 +58,52 @@ update msg model =
         SetCursor c ->
             { model | cursor = c }
 
-        UpdateNum c n ->
-            { model | ast = replace (Num n) c ast }
+        UpdateArg1 c v ->
+            let
+                updateInstr : Instr -> Instr
+                updateInstr i =
+                    case i of
+                        Num n ->
+                            String.filter Char.isDigit v |> String.toInt |> Maybe.withDefault 0 |> Num
+
+                        Let _ ->
+                            Let v
+
+                        Set _ ->
+                            Set v
+
+                        Get _ ->
+                            Get v
+
+                        Br _ ->
+                            Br v
+
+                        BrIf _ ->
+                            BrIf v
+
+                        Call _ ->
+                            Call v
+
+                        Fun _ a ca ->
+                            Fun v a ca
+
+                        Block _ ca ->
+                            Block v ca
+
+                        Loop _ ca ->
+                            Loop v ca
+
+                        If _ ca ->
+                            If v ca
+
+                        _ ->
+                            i
+            in
+            { model | ast = updateAt c updateInstr ast }
+
+        --{ model | ast = replace (Num n) c ast }
+        UpdateArg2 c n ->
+            model
 
         InsertInstr c1 ->
             case instr of
@@ -76,7 +121,7 @@ update msg model =
                     in
                     { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }
 
-        SetDragging i c ->
+        StartDragging i c ->
             let
                 meta =
                     getMeta i
@@ -122,11 +167,6 @@ onDragEnd =
     on "dragend" (Decode.succeed (SetCursor Nothing))
 
 
-changeNum : Cursor -> String -> Msg
-changeNum line num =
-    String.filter Char.isDigit num |> String.toInt |> Maybe.withDefault 0 |> UpdateNum line
-
-
 
 -- VIEW
 
@@ -147,7 +187,7 @@ astToHtml cursor ast =
                     [ onDragEnter (SetCursor (Just line))
                     , onDragOver
                     , onDrop line
-                    , onDragStart (SetDragging instr (Just line))
+                    , onDragStart (StartDragging instr (Just line))
                     , draggable "true"
                     , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
@@ -203,6 +243,20 @@ astToHtml cursor ast =
                     in
                     ( ( c, nextLine, nextIndent ), div (attrs nextIndent) body )
 
+                Get v ->
+                    ( ( c, nextLine, indent )
+                    , div (attrs indent)
+                        [ text <| meta.button ++ " $"
+                        , input
+                            [ value v
+                            , attribute "type" "text"
+                            , style "background-color" "transparent"
+                            , onInput (UpdateArg1 line)
+                            ]
+                            []
+                        ]
+                    )
+
                 Num n ->
                     ( ( c, nextLine, indent )
                     , div (attrs indent)
@@ -210,7 +264,7 @@ astToHtml cursor ast =
                             [ value (String.fromInt n)
                             , attribute "type" "text"
                             , style "background-color" "transparent"
-                            , onInput (changeNum line)
+                            , onInput (UpdateArg1 line)
                             ]
                             []
                         ]
@@ -241,6 +295,6 @@ toHtml ins =
                 meta =
                     getMeta instr
             in
-            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart (SetDragging instr Nothing) ] [ meta.button |> text ]
+            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart (StartDragging instr Nothing) ] [ meta.button |> text ]
         )
         ins
