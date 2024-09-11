@@ -1,9 +1,11 @@
 module Main exposing (..)
 
 import Browser
+import Debug exposing (log)
 import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
+import Html.Events.Extra.Mouse as Mouse
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, updateAt)
@@ -137,30 +139,24 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
-onDragStart : Msg -> Attribute Msg
-onDragStart msg =
-    --on "mousedown" (Decode.succeed msg)
-    preventDefaultOn "mousedown" (Decode.map alwaysPreventDefault (Decode.succeed msg))
+onDown : Msg -> Attribute Msg
+onDown msg =
+    Mouse.onDown (\event -> log "DOWN" msg)
 
 
-onDragEnter : Msg -> Attribute Msg
-onDragEnter msg =
-    on "mouseenter" (Decode.succeed msg)
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+    Mouse.onEnter (\event -> log "ENTER" msg)
 
 
-onDragOver : Attribute Msg
-onDragOver =
-    preventDefaultOn "mouseover" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
+onOver : Attribute Msg
+onOver =
+    Mouse.onEnter (\event -> log "OVER" Nop)
 
 
-onDrop : Cursor -> Attribute Msg
-onDrop cursor =
+onUp : Cursor -> Attribute Msg
+onUp cursor =
     preventDefaultOn "mouseup" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstr cursor)))
-
-
-onDragEnd : Attribute Msg
-onDragEnd =
-    on "mouseout" (Decode.succeed (SetCursor Nothing))
 
 
 
@@ -180,10 +176,10 @@ astToHtml cursor ast =
 
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
-                    [ onDragEnter (SetCursor (Just line))
-                    , onDragOver
-                    , onDrop line
-                    , onDragStart (StartDragging instr (Just line))
+                    [ onEnter (SetCursor (Just line))
+                    , onOver
+                    , onUp line
+                    , onDown (StartDragging instr (Just line))
                     , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
@@ -291,6 +287,6 @@ toHtml ins =
                 meta =
                     getMeta instr
             in
-            div [ class "instr", class (meta.class ++ "-border"), onDragStart (StartDragging instr Nothing) ] [ meta.button |> text ]
+            div [ class "instr", class (meta.class ++ "-border"), onDown (StartDragging instr Nothing) ] [ meta.button |> text ]
         )
         ins
