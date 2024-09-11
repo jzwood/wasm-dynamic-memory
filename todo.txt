@@ -7,6 +7,10 @@
   * alter label
 
 
+- touch events
+
+- try to get mouse events to work for mouse / touch events
+- try to use pointer events for both
 
 EXTRA CREDIT
   - outcome: input text is selectable/highlightable

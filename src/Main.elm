@@ -139,32 +139,28 @@ alwaysPreventDefault msg =
 
 onDragStart : Msg -> Attribute Msg
 onDragStart msg =
-    on "dragstart" (Decode.succeed msg)
+    --on "mousedown" (Decode.succeed msg)
+    preventDefaultOn "mousedown" (Decode.map alwaysPreventDefault (Decode.succeed msg))
 
 
 onDragEnter : Msg -> Attribute Msg
 onDragEnter msg =
-    on "dragenter" (Decode.succeed msg)
-
-
-onDragLeave : Attribute Msg
-onDragLeave =
-    on "dragleave" (Decode.succeed (SetCursor Nothing))
+    on "mouseenter" (Decode.succeed msg)
 
 
 onDragOver : Attribute Msg
 onDragOver =
-    preventDefaultOn "dragover" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
+    preventDefaultOn "mouseover" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
 
 
 onDrop : Cursor -> Attribute Msg
 onDrop cursor =
-    preventDefaultOn "drop" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstr cursor)))
+    preventDefaultOn "mouseup" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstr cursor)))
 
 
 onDragEnd : Attribute Msg
 onDragEnd =
-    on "dragend" (Decode.succeed (SetCursor Nothing))
+    on "mouseout" (Decode.succeed (SetCursor Nothing))
 
 
 
@@ -188,7 +184,6 @@ astToHtml cursor ast =
                     , onDragOver
                     , onDrop line
                     , onDragStart (StartDragging instr (Just line))
-                    , draggable "true"
                     , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
@@ -296,6 +291,6 @@ toHtml ins =
                 meta =
                     getMeta instr
             in
-            div [ class "instr", class (meta.class ++ "-border"), draggable "true", onDragStart (StartDragging instr Nothing) ] [ meta.button |> text ]
+            div [ class "instr", class (meta.class ++ "-border"), onDragStart (StartDragging instr Nothing) ] [ meta.button |> text ]
         )
         ins
