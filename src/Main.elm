@@ -5,7 +5,7 @@ import Debug exposing (log)
 import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
-import Html.Events.Extra.Mouse as Mouse
+import Html.Events.Extra.Pointer as Pointer
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, updateAt)
@@ -24,26 +24,31 @@ main =
     Browser.sandbox { init = init, update = update, view = view }
 
 
+type alias Position =
+    ( Float, Float )
+
+
 
 -- MODEL
 
 
 type alias Model =
-    { ast : List Instr, cursor : Maybe Cursor, instr : ( Instr, Maybe Cursor ), message : String }
+    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String }
 
 
 type Msg
     = SetCursor (Maybe Cursor)
-    | InsertInstr Cursor
+    | OnUp Cursor
     | UpdateArg1 Cursor String
     | UpdateArg2 Cursor String
-    | StartDragging Instr (Maybe Cursor)
+    | OnDown Instr (Maybe Cursor)
+    | OnMove Position
     | Nop
 
 
 init : Model
 init =
-    { ast = List.repeat init_rows EmptyLine, cursor = Nothing, message = "", instr = ( EmptyLine, Nothing ) }
+    { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing } }
 
 
 
@@ -53,7 +58,7 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     let
-        { cursor, instr, ast } =
+        { cursor, dragged, ast } =
             model
     in
     case msg of
@@ -107,12 +112,22 @@ update msg model =
         UpdateArg2 c n ->
             model
 
-        InsertInstr c1 ->
-            case instr of
-                ( i, Nothing ) ->
-                    { model | ast = insert i c1 ast, cursor = Nothing }
+        OnDown i c ->
+            let
+                meta =
+                    getMeta i
+            in
+            { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }
 
-                ( i, Just c0 ) ->
+        OnMove pos ->
+            { model | dragged = { dragged | pos = pos } }
+
+        OnUp c1 ->
+            case ( dragged.instr, dragged.pos, dragged.origin ) of
+                ( instr, _, Nothing ) ->
+                    { model | ast = insert instr c1 ast, cursor = Nothing }
+
+                ( i, _, Just c0 ) ->
                     let
                         offset =
                             if c0 < c1 then
@@ -122,13 +137,6 @@ update msg model =
                                 0
                     in
                     { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }
-
-        StartDragging i c ->
-            let
-                meta =
-                    getMeta i
-            in
-            { model | cursor = Nothing, instr = ( i, c ), message = String.concat [ "(", meta.button, ") ", meta.docs ] }
 
         Nop ->
             model
@@ -141,22 +149,17 @@ alwaysPreventDefault msg =
 
 onDown : Msg -> Attribute Msg
 onDown msg =
-    Mouse.onDown (\event -> log "DOWN" msg)
-
-
-onEnter : Msg -> Attribute Msg
-onEnter msg =
-    Mouse.onEnter (\event -> log "ENTER" msg)
-
-
-onOver : Attribute Msg
-onOver =
-    Mouse.onEnter (\event -> log "OVER" Nop)
+    Pointer.onDown (\event -> log "DOWN" msg)
 
 
 onUp : Cursor -> Attribute Msg
 onUp cursor =
-    preventDefaultOn "mouseup" (Decode.map alwaysPreventDefault (Decode.succeed (InsertInstr cursor)))
+    Pointer.onUp (\event -> log "UP" (OnUp cursor))
+
+
+onMove : Attribute Msg
+onMove =
+    Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
 
 
 
@@ -176,11 +179,10 @@ astToHtml cursor ast =
 
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
-                    [ onEnter (SetCursor (Just line))
-                    , onOver
-                    , onUp line
-                    , onDown (StartDragging instr (Just line))
-                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
+                    [ --onEnter (SetCursor (Just line))
+                      --onUp line
+                      --onDown (Down instr (Just line))
+                      style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
                         (if cursor == Just line then
@@ -271,11 +273,27 @@ astToHtml cursor ast =
 
 
 view : Model -> Html Msg
-view { ast, cursor, message } =
-    div []
+view { ast, cursor, message, dragged } =
+    let
+        { pos, instr } =
+            dragged
+
+        meta =
+            getMeta instr
+    in
+    div [ onMove ]
         [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
+        , div
+            [ id "paddle"
+            , style "position" "absolute"
+            , style "pointer-events" "none"
+            , style "user-select" "none"
+            , style "left" ((pos |> Tuple.first |> String.fromFloat) ++ "px")
+            , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
+            ]
+            [ text meta.button ]
         ]
 
 
@@ -287,6 +305,13 @@ toHtml ins =
                 meta =
                     getMeta instr
             in
-            div [ class "instr", class (meta.class ++ "-border"), onDown (StartDragging instr Nothing) ] [ meta.button |> text ]
+            div
+                [ style "user-select" "none"
+                , style "touch-action" "pan-x"
+                , class "instr"
+                , class (meta.class ++ "-border")
+                , onDown (OnDown instr Nothing)
+                ]
+                [ meta.button |> text ]
         )
         ins

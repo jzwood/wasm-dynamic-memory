@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <div id="draggable" style="width: 100px; height: 100px; background-color: #f0a; position: absolute;">
+    Drag Me
+</div>
+<div style="height: 10rem; border: 3px solid cyan;">SPACE</div>
+<div id="target" style="height: 20rem; border: 3px solid red;">
+    XXX
+</div>
+<script>
+  const draggable = document.getElementById('draggable');
+  const target = document.getElementById('target');
+let isDragging = false;
+let offsetX, offsetY;
+draggable.addEventListener('pointerdown', (event) => {
+    isDragging = true;
+    draggable.setPointerCapture(event.pointerId);
+    const rect = draggable.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+    console.log(`Pointer down at (${event.clientX}, ${event.clientY})`);
+});
+draggable.addEventListener('pointermove', (event) => {
+    if (isDragging) {
+        draggable.style.left = `${event.clientX - offsetX}px`;
+        draggable.style.top = `${event.clientY - offsetY}px`;
+        // console.log(`Pointer move to (${event.clientX}, ${event.clientY})`);
+    }
+});
+draggable.addEventListener('pointerup', (event) => {
+    if (isDragging) {
+        isDragging = false;
+        draggable.releasePointerCapture(event.pointerId);
+        console.log(`Pointer up at (${event.clientX}, ${event.clientY})`);
+    }
+});
+draggable.addEventListener('pointercancel', (event) => {
+    if (isDragging) {
+        isDragging = false;
+        draggable.releasePointerCapture(event.pointerId);
+        console.log('Pointer cancel');
+    }
+});
+target.addEventListener('pointerover', (e) => {
+  console.log(e, "TOUCH OVER!!!!")
+})
+
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <div id="draggable" style="width: 100px; height: 100px; background-color: #f0a; position: absolute;">
+      Drag Me
+  </div>
+  <div id="target" style="width: 200px; height: 200px; background-color: #0af; position: absolute; top: 300px; left: 100px;">
+      Drop Target
+  </div>
+  <script>
+    const draggable = document.getElementById('draggable');
+const dropTarget = document.getElementById('target');
+let isDragging = false;
+let offsetX, offsetY;
+function isPointerOverTarget(pointerEvent, targetElement) {
+    const targetRect = targetElement.getBoundingClientRect();
+    return (
+        pointerEvent.clientX >= targetRect.left &&
+        pointerEvent.clientX <= targetRect.right &&
+        pointerEvent.clientY >= targetRect.top &&
+        pointerEvent.clientY <= targetRect.bottom
+    );
+}
+draggable.addEventListener('pointerdown', (event) => {
+    isDragging = true;
+    draggable.setPointerCapture(event.pointerId);
+    const rect = draggable.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+});
+document.addEventListener('pointermove', (event) => {
+    if (isDragging) {
+        draggable.style.left = `${event.clientX - offsetX}px`;
+        draggable.style.top = `${event.clientY - offsetY}px`;
+        if (isPointerOverTarget(event, dropTarget)) {
+            dropTarget.style.backgroundColor = '#f00'; // Change color on hover
+            console.log('Pointer is over the drop target');
+        } else {
+            dropTarget.style.backgroundColor = '#0af'; // Reset color
+        }
+    }
+});
+document.addEventListener('pointerup', (event) => {
+    if (isDragging) {
+        isDragging = false;
+        draggable.releasePointerCapture(event.pointerId);
+        if (isPointerOverTarget(event, dropTarget)) {
+            console.log('Dropped on target!');
+        } else {
+            console.log('Not dropped on target');
+        }
+    }
+});
+document.addEventListener('pointercancel', (event) => {
+    if (isDragging) {
+        isDragging = false;
+        draggable.releasePointerCapture(event.pointerId);
+    }
+});
+  </script>
+</body>
+</html>
