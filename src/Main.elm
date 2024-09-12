@@ -6,6 +6,7 @@ import Html exposing (Attribute, Html, aside, button, div, input, section, span,
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Html.Events.Extra.Pointer as Pointer
+import Html.Events.Extra.Touch as Touch
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, updateAt)
@@ -157,12 +158,20 @@ onUp cursor =
     Pointer.onUp (\event -> log "UP" (OnUp cursor))
 
 
+touchCoordinates : Touch.Event -> ( Float, Float )
+touchCoordinates touchEvent =
+    List.head touchEvent.changedTouches
+        |> Maybe.map .clientPos
+        |> Maybe.withDefault ( 0, 0 )
+
+
 onMove : Attribute Msg
 onMove =
     Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
 
 
 
+--Touch.onMove (\event -> OnMove <| touchCoordinates event)
 -- VIEW
 
 
