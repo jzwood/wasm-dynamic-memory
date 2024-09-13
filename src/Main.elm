@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Browser.Dom as Dom
 import Debug exposing (log)
 import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
@@ -11,6 +12,7 @@ import Html.Events.Extra.Touch as Touch
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, updateAt)
+import Task
 import Utils exposing (..)
 
 
@@ -35,7 +37,7 @@ type alias Position =
 
 
 type alias Model =
-    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String, codeScrollTop : Float }
+    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String, scrollTop : Float }
 
 
 type Msg
@@ -45,12 +47,13 @@ type Msg
     | UpdateArg2 Cursor String
     | OnDown Instr (Maybe Cursor)
     | OnMove Position
+    | SetScrollTop Float
     | Nop
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, codeScrollTop = 0 }, Cmd.none )
+    ( { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, scrollTop = 0 }, Cmd.none )
 
 
 
@@ -64,6 +67,9 @@ update msg model =
             model
     in
     case msg of
+        SetScrollTop scrollTop ->
+            ( { model | scrollTop = scrollTop }, Cmd.none )
+
         SetCursor c ->
             ( { model | cursor = c }, Cmd.none )
 
@@ -122,7 +128,20 @@ update msg model =
             ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, Cmd.none )
 
         OnMove pos ->
-            ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
+            let
+                cmd =
+                    Task.attempt
+                        (\result ->
+                            case result of
+                                Ok viewport ->
+                                    SetScrollTop viewport.viewport.y
+
+                                Err _ ->
+                                    SetScrollTop 0
+                        )
+                        (Dom.getViewportOf "Code")
+            in
+            ( { model | dragged = { dragged | pos = pos } }, cmd )
 
         OnUp c1 ->
             case ( dragged.instr, dragged.pos, dragged.origin ) of
@@ -184,17 +203,16 @@ onTouchMove =
 
 
 
+--onPointerMove : Attribute Msg
+--onPointerMove =
+--Pointer.onWithOptions "pointermove"
+--{ stopPropagation = False, preventDefault = False }
+--(\event -> OnMove event.pointer.clientPos)
 --onMouseMove : Attribute Msg
 --onMouseMove =
 --Mouse.onWithOptions "mousemove"
 --{ stopPropagation = False, preventDefault = False }
 --(\event -> OnMove event.clientPos)
---onMove : Attribute Msg
---onMove =
---Pointer.onWithOptions "pointermove"
---{ stopPropagation = False, preventDefault = False }
---(\event -> OnMove (log "POINTER" event.pointer).clientPos)
---Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
 -- VIEW
 
 
