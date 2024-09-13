@@ -22,7 +22,7 @@ init_rows =
 
 
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.element { init = init, update = update, subscriptions = subscriptions, view = view }
 
 
 type alias Position =
@@ -34,7 +34,7 @@ type alias Position =
 
 
 type alias Model =
-    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String }
+    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String, codeScrollTop : Float }
 
 
 type Msg
@@ -47,16 +47,16 @@ type Msg
     | Nop
 
 
-init : Model
-init =
-    { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing } }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, codeScrollTop = 0 }, Cmd.none )
 
 
 
 -- UPDATE
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
         { cursor, dragged, ast } =
@@ -64,7 +64,7 @@ update msg model =
     in
     case msg of
         SetCursor c ->
-            { model | cursor = c }
+            ( { model | cursor = c }, Cmd.none )
 
         UpdateArg1 c v ->
             let
@@ -107,26 +107,26 @@ update msg model =
                         _ ->
                             i
             in
-            { model | ast = updateAt c updateInstr ast }
+            ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
 
         --{ model | ast = replace (Num n) c ast }
         UpdateArg2 c n ->
-            model
+            ( model, Cmd.none )
 
         OnDown i c ->
             let
                 meta =
                     getMeta i
             in
-            { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }
+            ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, Cmd.none )
 
         OnMove pos ->
-            { model | dragged = { dragged | pos = pos } }
+            ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
 
         OnUp c1 ->
             case ( dragged.instr, dragged.pos, dragged.origin ) of
                 ( instr, _, Nothing ) ->
-                    { model | ast = insert instr c1 ast, cursor = Nothing }
+                    ( { model | ast = insert instr c1 ast, cursor = Nothing }, Cmd.none )
 
                 ( i, _, Just c0 ) ->
                     let
@@ -137,10 +137,19 @@ update msg model =
                             else
                                 0
                     in
-                    { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }
+                    ( { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }, Cmd.none )
 
         Nop ->
-            model
+            ( model, Cmd.none )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
 
 
 alwaysPreventDefault : msg -> ( msg, Bool )
