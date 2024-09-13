@@ -167,11 +167,13 @@ touchCoordinates touchEvent =
 
 onMove : Attribute Msg
 onMove =
-    Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
+    Touch.onWithOptions "touchmove"
+        { stopPropagation = False, preventDefault = False }
+        (\event -> OnMove <| touchCoordinates event)
 
 
 
---Touch.onMove (\event -> OnMove <| touchCoordinates event)
+--Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
 -- VIEW
 
 
@@ -189,8 +191,8 @@ astToHtml cursor ast =
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
                     [ --onEnter (SetCursor (Just line))
-                      --onUp line
-                      --onDown (Down instr (Just line))
+                      onUp line
+                    , --onDown (Down instr (Just line))
                       style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
@@ -301,6 +303,7 @@ view { ast, cursor, message, dragged } =
             , style "user-select" "none"
             , style "left" ((pos |> Tuple.first |> String.fromFloat) ++ "px")
             , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
+            , class "instr"
             ]
             [ text meta.button ]
         ]
