@@ -5,6 +5,7 @@ import Debug exposing (log)
 import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
+import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
 import Instructions exposing (..)
@@ -162,9 +163,10 @@ onDown msg =
     Pointer.onDown (\event -> log "DOWN" msg)
 
 
-onUp : Cursor -> Attribute Msg
-onUp cursor =
-    Pointer.onUp (\event -> log "UP" (OnUp cursor))
+
+--onUp : Cursor -> Attribute Msg
+--onUp cursor =
+--Pointer.onUp (\event -> log "UP" (OnUp cursor))
 
 
 touchCoordinates : Touch.Event -> ( Float, Float )
@@ -174,14 +176,24 @@ touchCoordinates touchEvent =
         |> Maybe.withDefault ( 0, 0 )
 
 
-onMove : Attribute Msg
-onMove =
+onTouchMove : Attribute Msg
+onTouchMove =
     Touch.onWithOptions "touchmove"
         { stopPropagation = False, preventDefault = False }
         (\event -> OnMove <| touchCoordinates event)
 
 
 
+--onMouseMove : Attribute Msg
+--onMouseMove =
+--Mouse.onWithOptions "mousemove"
+--{ stopPropagation = False, preventDefault = False }
+--(\event -> OnMove event.clientPos)
+--onMove : Attribute Msg
+--onMove =
+--Pointer.onWithOptions "pointermove"
+--{ stopPropagation = False, preventDefault = False }
+--(\event -> OnMove (log "POINTER" event.pointer).clientPos)
 --Pointer.onMove (\event -> OnMove (log "MOVE" event.pointer.clientPos))
 -- VIEW
 
@@ -200,8 +212,8 @@ astToHtml cursor ast =
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
                     [ --onEnter (SetCursor (Just line))
-                      onUp line
-                    , --onDown (Down instr (Just line))
+                      --onUp line
+                      --onDown (Down instr (Just line))
                       style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , class "line"
                     , class
@@ -301,7 +313,7 @@ view { ast, cursor, message, dragged } =
         meta =
             getMeta instr
     in
-    div [ onMove ]
+    div [ onTouchMove ]
         [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
