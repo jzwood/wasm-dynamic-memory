@@ -1,17 +1,10 @@
-- listing the instructions is currently flat
-- we need it to nest
 - make the following operations work
   * insertion
   * deletion
   * move
   * alter label
+- outcome: input text is selectable/highlightable
 
 
-- touch events
-
-- try to get mouse events to work for mouse / touch events
-- try to use pointer events for both
-
-EXTRA CREDIT
-  - outcome: input text is selectable/highlightable
-  - track onFocus and onBlur exclusively to toggle draggable={bool}
+TODO
+- refactor dragged pos to be target instead

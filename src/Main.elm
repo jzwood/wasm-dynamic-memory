@@ -20,6 +20,10 @@ init_rows =
     30
 
 
+line_height =
+    23
+
+
 
 -- MAIN
 
@@ -36,13 +40,16 @@ type alias Position =
 -- MODEL
 
 
+type alias Dragged =
+    { instr : Instr, pos : Position, origin : Maybe Cursor }
+
+
 type alias Model =
-    { ast : List Instr, cursor : Maybe Cursor, dragged : { instr : Instr, pos : Position, origin : Maybe Cursor }, message : String, scrollTop : Float }
+    { ast : List Instr, dragged : Dragged, message : String, scrollTop : Float }
 
 
 type Msg
-    = SetCursor (Maybe Cursor)
-    | OnUp Cursor
+    = OnUp Cursor
     | UpdateArg1 Cursor String
     | UpdateArg2 Cursor String
     | OnDown Instr (Maybe Cursor)
@@ -53,7 +60,7 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, cursor = Nothing, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, scrollTop = 0 }, Cmd.none )
+    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, scrollTop = 0 }, Cmd.none )
 
 
 
@@ -63,15 +70,12 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { cursor, dragged, ast } =
+        { dragged, ast } =
             model
     in
     case msg of
         SetScrollTop scrollTop ->
             ( { model | scrollTop = log "SCROLL" scrollTop }, Cmd.none )
-
-        SetCursor c ->
-            ( { model | cursor = c }, Cmd.none )
 
         UpdateArg1 c v ->
             let
@@ -125,7 +129,7 @@ update msg model =
                 meta =
                     getMeta i
             in
-            ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
+            ( { model | dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
 
         OnMove pos ->
             ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
@@ -133,7 +137,7 @@ update msg model =
         OnUp c1 ->
             case ( dragged.instr, dragged.pos, dragged.origin ) of
                 ( instr, _, Nothing ) ->
-                    ( { model | ast = insert instr c1 ast, cursor = Nothing }, Cmd.none )
+                    ( { model | ast = insert instr c1 ast }, Cmd.none )
 
                 ( i, _, Just c0 ) ->
                     let
@@ -144,7 +148,7 @@ update msg model =
                             else
                                 0
                     in
-                    ( { model | ast = remove c0 ast |> insert i (c1 + offset), cursor = Nothing }, Cmd.none )
+                    ( { model | ast = remove c0 ast |> insert i (c1 + offset) }, Cmd.none )
 
         Nop ->
             ( model, Cmd.none )
@@ -240,6 +244,7 @@ astToHtml cursor ast =
                       --onUp line
                       --onDown (Down instr (Just line))
                       style "padding-left" (String.fromInt (i * 2) ++ "ch")
+                    , style "height" <| String.fromInt line_height ++ "px"
                     , class "line"
                     , class
                         (if cursor == Just line then
@@ -330,7 +335,7 @@ astToHtml cursor ast =
 
 
 view : Model -> Html Msg
-view { ast, cursor, message, dragged } =
+view { ast, message, dragged } =
     let
         { pos, instr } =
             dragged
@@ -339,7 +344,7 @@ view { ast, cursor, message, dragged } =
             getMeta instr
     in
     div [ onPointerMove ]
-        [ section [ id "code" ] (astToHtml cursor ast)
+        [ section [ id "code" ] (astToHtml Nothing ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         , div
