@@ -93,6 +93,7 @@ main {
   counter-increment: line;
   height: var(--line-height);
   padding: 0;
+  margin: 0;
   list-style: none;
 }
 

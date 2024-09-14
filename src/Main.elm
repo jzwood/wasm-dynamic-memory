@@ -47,7 +47,6 @@ type Msg
     | UpdateArg2 Cursor String
     | OnDown Instr (Maybe Cursor)
     | OnMove Position
-    | OnScroll
     | SetScrollTop Float
     | Nop
 
@@ -126,23 +125,7 @@ update msg model =
                 meta =
                     getMeta i
             in
-            ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, Cmd.none )
-
-        OnScroll ->
-            let
-                cmd =
-                    Task.attempt
-                        (\result ->
-                            case log "RESULT" result of
-                                Ok viewport ->
-                                    SetScrollTop viewport.viewport.y
-
-                                Err _ ->
-                                    Nop
-                        )
-                        (Dom.getViewportOf "code")
-            in
-            ( model, cmd )
+            ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
 
         OnMove pos ->
             ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
@@ -206,9 +189,24 @@ onPointerMove =
         (\event -> OnMove event.pointer.clientPos)
 
 
-onScroll : Attribute Msg
-onScroll =
-    on "scroll" (Decode.succeed OnScroll)
+
+--onScroll : Attribute Msg
+--onScroll =
+--on "scroll" (Decode.succeed OnScroll)
+
+
+cmdScrollTop : Cmd Msg
+cmdScrollTop =
+    Task.attempt
+        (\result ->
+            case log "RESULT" result of
+                Ok viewport ->
+                    SetScrollTop viewport.viewport.y
+
+                Err _ ->
+                    Nop
+        )
+        (Dom.getViewportOf "code")
 
 
 
@@ -341,7 +339,7 @@ view { ast, cursor, message, dragged } =
             getMeta instr
     in
     div [ onPointerMove ]
-        [ section [ id "code", onScroll ] (astToHtml cursor ast)
+        [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         , div
