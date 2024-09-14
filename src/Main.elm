@@ -47,6 +47,7 @@ type Msg
     | UpdateArg2 Cursor String
     | OnDown Instr (Maybe Cursor)
     | OnMove Position
+    | OnScroll
     | SetScrollTop Float
     | Nop
 
@@ -68,7 +69,7 @@ update msg model =
     in
     case msg of
         SetScrollTop scrollTop ->
-            ( { model | scrollTop = scrollTop }, Cmd.none )
+            ( { model | scrollTop = log "SCROLL" scrollTop }, Cmd.none )
 
         SetCursor c ->
             ( { model | cursor = c }, Cmd.none )
@@ -127,21 +128,24 @@ update msg model =
             in
             ( { model | cursor = Nothing, dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, Cmd.none )
 
-        OnMove pos ->
+        OnScroll ->
             let
                 cmd =
                     Task.attempt
                         (\result ->
-                            case result of
+                            case log "RESULT" result of
                                 Ok viewport ->
                                     SetScrollTop viewport.viewport.y
 
                                 Err _ ->
-                                    SetScrollTop 0
+                                    Nop
                         )
-                        (Dom.getViewportOf "Code")
+                        (Dom.getViewportOf "code")
             in
-            ( { model | dragged = { dragged | pos = pos } }, cmd )
+            ( model, cmd )
+
+        OnMove pos ->
+            ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
 
         OnUp c1 ->
             case ( dragged.instr, dragged.pos, dragged.origin ) of
@@ -195,19 +199,24 @@ touchCoordinates touchEvent =
         |> Maybe.withDefault ( 0, 0 )
 
 
-onTouchMove : Attribute Msg
-onTouchMove =
-    Touch.onWithOptions "touchmove"
+onPointerMove : Attribute Msg
+onPointerMove =
+    Pointer.onWithOptions "pointermove"
         { stopPropagation = False, preventDefault = False }
-        (\event -> OnMove <| touchCoordinates event)
+        (\event -> OnMove event.pointer.clientPos)
+
+
+onScroll : Attribute Msg
+onScroll =
+    on "scroll" (Decode.succeed OnScroll)
 
 
 
---onPointerMove : Attribute Msg
---onPointerMove =
---Pointer.onWithOptions "pointermove"
+--onTouchMove : Attribute Msg
+--onTouchMove =
+--Touch.onWithOptions "touchmove"
 --{ stopPropagation = False, preventDefault = False }
---(\event -> OnMove event.pointer.clientPos)
+--(\event -> OnMove <| touchCoordinates event)
 --onMouseMove : Attribute Msg
 --onMouseMove =
 --Mouse.onWithOptions "mousemove"
@@ -331,8 +340,8 @@ view { ast, cursor, message, dragged } =
         meta =
             getMeta instr
     in
-    div [ onTouchMove ]
-        [ section [ id "code" ] (astToHtml cursor ast)
+    div [ onPointerMove ]
+        [ section [ id "code", onScroll ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         , div

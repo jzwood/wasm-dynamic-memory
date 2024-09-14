@@ -6,6 +6,7 @@
   --middle-ground-text: #333;
   --near-ground-text: #333;
   --line-height: 1.28rem;
+  --bottom-inset: 50px;
 }
 
 * {
@@ -47,7 +48,7 @@ main {
 
 #code {
   padding: 0 0.25rem 0 1.5rem;
-  height: calc(100vh * 2 / 3);
+  height: calc((100vh - var(--bottom-inset)) * 2 / 3);
   background-color: #262627; // #333333;
   /*color: aqua;*/
   overflow: auto;
@@ -55,11 +56,11 @@ main {
 }
 
 #messages {
-  padding: 0 0.25rem;
-  height: calc(100vh / 12);
-  border-width: 1px;
-  border-color:  #4E4D4E;
-  border-style: solid;
+  height: calc((100vh - var(--bottom-inset)) / 12);
+  /*padding: 0 0.25rem;*/
+  /*border-width: 1px;*/
+  /*border-color:  #4E4D4E;*/
+  /*border-style: solid;*/
 }
 
 #instructions {
@@ -68,7 +69,7 @@ main {
   flex-direction: column;
   flex-wrap: wrap;
   gap: 0.25rem;
-  height: calc(100vh / 4);
+  height: calc((100vh - var(--bottom-inset)) / 4);
   overflow-x: scroll;
   /*background-color: #2F3030;*/
 }
