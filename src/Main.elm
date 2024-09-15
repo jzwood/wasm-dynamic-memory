@@ -175,10 +175,17 @@ onDown msg =
     Pointer.onDown (\event -> log "DOWN" msg)
 
 
+onUp : Maybe Cursor -> Attribute Msg
+onUp maybeCursor =
+    Pointer.onUp
+        (\event ->
+            case maybeCursor of
+                Nothing ->
+                    Nop
 
---onUp : Cursor -> Attribute Msg
---onUp cursor =
---Pointer.onUp (\event -> log "UP" (OnUp cursor))
+                Just cursor ->
+                    log "UP" (OnUp cursor)
+        )
 
 
 touchCoordinates : Touch.Event -> ( Float, Float )
@@ -194,6 +201,8 @@ onPointerMove =
         { stopPropagation = False, preventDefault = False }
         (\event -> OnMove event.pointer.clientPos)
 
+--onPointerLeave : Attribute Msg
+--onPointerLeave = Pointer.onLeave (\event -> OnMove (0, 0))
 
 
 --onScroll : Attribute Msg
@@ -230,8 +239,8 @@ cmdScrollTop =
 
 
 posToCursor : Position -> Float -> Maybe Cursor
-posToCursor ( _, y ) scrollTop =
-    if y > 0 then
+posToCursor ( x, y ) scrollTop =
+    if x > 0 && y > 0 then
         Just ((y + scrollTop) / line_height |> round)
 
     else
@@ -252,7 +261,6 @@ astToHtml cursor ast =
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
                     [ --onEnter (SetCursor (Just line))
-                      --onUp line
                       --onDown (Down instr (Just line))
                       style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , style "height" <| String.fromInt line_height ++ "px"
@@ -353,9 +361,12 @@ view { ast, message, dragged, scrollTop } =
 
         meta =
             getMeta instr
+
+        cursor =
+            posToCursor pos scrollTop
     in
     div [ onPointerMove ]
-        [ section [ id "code" ] (astToHtml (posToCursor pos scrollTop) ast)
+        [ section [ id "code", onUp cursor ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         , div
