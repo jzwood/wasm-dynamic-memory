@@ -16,10 +16,12 @@ import Task
 import Utils exposing (..)
 
 
+init_rows : Int
 init_rows =
     30
 
 
+line_height : number
 line_height =
     23
 
@@ -227,6 +229,15 @@ cmdScrollTop =
 -- VIEW
 
 
+posToCursor : Position -> Float -> Maybe Cursor
+posToCursor ( _, y ) scrollTop =
+    if y > 0 then
+        Just ((y + scrollTop) / line_height |> round)
+
+    else
+        Nothing
+
+
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
     List.Extra.mapAccuml
@@ -335,7 +346,7 @@ astToHtml cursor ast =
 
 
 view : Model -> Html Msg
-view { ast, message, dragged } =
+view { ast, message, dragged, scrollTop } =
     let
         { pos, instr } =
             dragged
@@ -344,7 +355,7 @@ view { ast, message, dragged } =
             getMeta instr
     in
     div [ onPointerMove ]
-        [ section [ id "code" ] (astToHtml Nothing ast)
+        [ section [ id "code" ] (astToHtml (posToCursor pos scrollTop) ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml instructions)
         , div
