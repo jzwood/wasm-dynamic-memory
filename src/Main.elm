@@ -201,10 +201,10 @@ onPointerMove =
         { stopPropagation = False, preventDefault = False }
         (\event -> OnMove event.pointer.clientPos)
 
+
+
 --onPointerLeave : Attribute Msg
 --onPointerLeave = Pointer.onLeave (\event -> OnMove (0, 0))
-
-
 --onScroll : Attribute Msg
 --onScroll =
 --on "scroll" (Decode.succeed OnScroll)
@@ -366,9 +366,9 @@ view { ast, message, dragged, scrollTop } =
             posToCursor pos scrollTop
     in
     div [ onPointerMove ]
-        [ section [ id "code", onUp cursor ] (astToHtml cursor ast)
+        [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
-        , section [ id "instructions" ] (toHtml instructions)
+        , section [ id "instructions" ] (toHtml cursor instructions)
         , div
             [ id "paddle"
             , style "position" "absolute"
@@ -382,8 +382,8 @@ view { ast, message, dragged, scrollTop } =
         ]
 
 
-toHtml : List Instr -> List (Html Msg)
-toHtml ins =
+toHtml : Maybe Cursor -> List Instr -> List (Html Msg)
+toHtml cursor ins =
     List.map
         (\instr ->
             let
@@ -396,6 +396,7 @@ toHtml ins =
                 , class "instr"
                 , class (meta.class ++ "-border")
                 , onDown (OnDown instr Nothing)
+                , onUp cursor
                 ]
                 [ meta.button |> text ]
         )
