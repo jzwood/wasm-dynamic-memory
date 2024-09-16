@@ -47,22 +47,23 @@ type alias Dragged =
 
 
 type alias Model =
-    { ast : List Instr, dragged : Dragged, message : String, scrollTop : Float }
+    { ast : List Instr, dragged : Maybe Dragged, message : String, scrollTop : Float }
 
 
 type Msg
     = OnUp Cursor
     | UpdateArg1 Cursor String
     | UpdateArg2 Cursor String
-    | OnDown Instr (Maybe Cursor)
+    | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
+    | ResetDragged
     | SetScrollTop Float
     | Nop
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = { instr = EmptyLine, pos = ( 0, 0 ), origin = Nothing }, scrollTop = 0 }, Cmd.none )
+    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, scrollTop = 0 }, Cmd.none )
 
 
 
@@ -72,7 +73,7 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { dragged, ast } =
+        { ast } =
             model
     in
     case msg of
@@ -126,33 +127,46 @@ update msg model =
         UpdateArg2 c n ->
             ( model, Cmd.none )
 
-        OnDown i c ->
+        OnDown i c pos ->
             let
                 meta =
                     getMeta i
             in
-            ( { model | dragged = { instr = i, pos = ( 0, 0 ), origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
+            ( { model | dragged = Just { instr = i, pos = pos, origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
 
         OnMove pos ->
-            ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
+            case model.dragged of
+                Just dragged ->
+                    ( { model | dragged = Just { dragged | pos = pos } }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         OnUp c1 ->
-            case ( dragged.instr, dragged.origin ) of
-                ( instr, Nothing ) ->
-                    ( { model | ast = insert instr c1 ast }, Cmd.none )
+            case model.dragged of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                ( instr, Just c0 ) ->
-                    let
-                        postRemoveCursor =
-                            c1
-                                - (if c0 < c1 then
-                                    1
+                Just dragged ->
+                    case ( dragged.instr, dragged.origin ) of
+                        ( instr, Nothing ) ->
+                            ( { model | ast = insert instr c1 ast, dragged = Nothing }, Cmd.none )
 
-                                   else
-                                    0
-                                  )
-                    in
-                    ( { model | ast = remove c0 ast |> insert instr postRemoveCursor }, Cmd.none )
+                        ( instr, Just c0 ) ->
+                            let
+                                postRemoveCursor =
+                                    c1
+                                        - (if c0 < c1 then
+                                            1
+
+                                           else
+                                            0
+                                          )
+                            in
+                            ( { model | ast = remove c0 ast |> insert instr postRemoveCursor, dragged = Nothing }, Cmd.none )
+
+        ResetDragged ->
+            ( { model | dragged = Nothing }, Cmd.none )
 
         Nop ->
             ( model, Cmd.none )
@@ -172,9 +186,10 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
-onDown : Msg -> Attribute Msg
-onDown msg =
-    Pointer.onDown (\event -> log "DOWN" msg)
+onDown : (Position -> Msg) -> Attribute Msg
+onDown fxn =
+    Pointer.onDown
+        (\event -> fxn event.pointer.clientPos)
 
 
 onUp : Maybe Cursor -> Attribute Msg
@@ -190,11 +205,14 @@ onUp maybeCursor =
         )
 
 
-touchCoordinates : Touch.Event -> ( Float, Float )
-touchCoordinates touchEvent =
-    List.head touchEvent.changedTouches
-        |> Maybe.map .clientPos
-        |> Maybe.withDefault ( 0, 0 )
+onPointerCancel : Attribute Msg
+onPointerCancel =
+    Pointer.onCancel (\event -> ResetDragged)
+
+
+onPointerOut : Attribute Msg
+onPointerOut =
+    Pointer.onOut (\event -> ResetDragged)
 
 
 onPointerMove : Attribute Msg
@@ -227,6 +245,11 @@ cmdScrollTop =
 
 
 
+--touchCoordinates : Touch.Event -> ( Float, Float )
+--touchCoordinates touchEvent =
+--List.head touchEvent.changedTouches
+--|> Maybe.map .clientPos
+--|> Maybe.withDefault ( 0, 0 )
 --onTouchMove : Attribute Msg
 --onTouchMove =
 --Touch.onWithOptions "touchmove"
@@ -238,15 +261,6 @@ cmdScrollTop =
 --{ stopPropagation = False, preventDefault = False }
 --(\event -> OnMove event.clientPos)
 -- VIEW
-
-
-posToCursor : Position -> Float -> Maybe Cursor
-posToCursor ( x, y ) scrollTop =
-    if x > 0 && y > 0 then
-        Just ((y + scrollTop) / line_height |> round)
-
-    else
-        Nothing
 
 
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
@@ -279,6 +293,8 @@ astToHtml cursor ast =
                 body =
                     [ span
                         [ onDown (OnDown instr (Just line))
+                        , onPointerCancel
+                        , onPointerOut
                         , onUp cursor
                         , class "line-instr"
                         ]
@@ -362,30 +378,50 @@ astToHtml cursor ast =
 view : Model -> Html Msg
 view { ast, message, dragged, scrollTop } =
     let
-        { pos, instr } =
-            dragged
-
-        meta =
-            getMeta instr
-
         cursor =
-            posToCursor pos scrollTop
+            dragged
+                |> Maybe.andThen
+                    (\{ pos } ->
+                        let
+                            ( x, y ) =
+                                pos
+                        in
+                        if x > 0 && y > 0 then
+                            Just ((y + scrollTop) / line_height |> round)
+
+                        else
+                            Nothing
+                    )
     in
     div [ onPointerMove ]
         [ section [ id "code" ] (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml cursor instructions)
-        , div
-            [ id "paddle"
-            , style "position" "absolute"
-            , style "pointer-events" "none"
-            , style "user-select" "none"
-            , style "left" ((pos |> Tuple.first |> String.fromFloat) ++ "px")
-            , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
-            , class "instr"
-            ]
-            [ text meta.button ]
+        , viewPaddle dragged
         ]
+
+
+viewPaddle : Maybe Dragged -> Html Msg
+viewPaddle dragged =
+    case dragged of
+        Nothing ->
+            text ""
+
+        Just { instr, pos, origin } ->
+            let
+                meta =
+                    getMeta instr
+            in
+            div
+                [ id "paddle"
+                , style "position" "absolute"
+                , style "pointer-events" "none"
+                , style "user-select" "none"
+                , style "left" ((pos |> Tuple.first |> String.fromFloat) ++ "px")
+                , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
+                , class "instr"
+                ]
+                [ text meta.button ]
 
 
 toHtml : Maybe Cursor -> List Instr -> List (Html Msg)
@@ -403,6 +439,8 @@ toHtml cursor ins =
                 , class (meta.class ++ "-border")
                 , onDown (OnDown instr Nothing)
                 , onUp cursor
+                , onPointerCancel
+                , onPointerOut
                 ]
                 [ meta.button |> text ]
         )
