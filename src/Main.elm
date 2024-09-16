@@ -77,7 +77,7 @@ update msg model =
     in
     case msg of
         SetScrollTop scrollTop ->
-            ( { model | scrollTop = log "SCROLL" scrollTop }, Cmd.none )
+            ( { model | scrollTop = scrollTop }, Cmd.none )
 
         UpdateArg1 c v ->
             let
@@ -216,7 +216,7 @@ cmdScrollTop : Cmd Msg
 cmdScrollTop =
     Task.attempt
         (\result ->
-            case log "RESULT" result of
+            case result of
                 Ok viewport ->
                     SetScrollTop viewport.viewport.y
 
@@ -262,9 +262,7 @@ astToHtml cursor ast =
 
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
-                    [ onDown (OnDown instr (Just line))
-                    , onUp cursor
-                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
+                    [ style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , style "height" <| String.fromInt line_height ++ "px"
                     , class "line"
                     , class
@@ -279,18 +277,24 @@ astToHtml cursor ast =
 
                 body : List (Html Msg)
                 body =
-                    [ case instr of
-                        Block l ca ->
-                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+                    [ span
+                        [ onDown (OnDown instr (Just line))
+                        , onUp cursor
+                        , class "line-instr"
+                        ]
+                        [ case instr of
+                            Block l ca ->
+                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
 
-                        Loop l ca ->
-                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+                            Loop l ca ->
+                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
 
-                        If l ca ->
-                            unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
+                            If l ca ->
+                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
 
-                        _ ->
-                            meta.button |> text
+                            _ ->
+                                meta.button |> text
+                        ]
                     ]
 
                 indentedLine =

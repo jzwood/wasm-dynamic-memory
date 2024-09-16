@@ -29,7 +29,9 @@ body {
 }
 
 
-html, body, input {
+html,
+body,
+input {
   font-size: 1.1rem;
   font-family: "Courier New", Courier, monospace;
 }
@@ -50,7 +52,6 @@ main {
   padding: 0 0.25rem 0 1.5rem;
   height: calc((100vh - var(--bottom-inset)) * 2 / 3);
   background-color: #262627; // #333333;
-  /*color: aqua;*/
   overflow: auto;
   position: relative;
 }
@@ -81,11 +82,13 @@ main {
   height: 1.75rem;
 }
 
-.line:hover, .instr:hover {
+.line:hover,
+.instr:hover {
   cursor: grab;
 }
 
-.line:active:hover, .instr:active:hover {
+.line:active:hover,
+.instr:active:hover {
   cursor: grabbing;
 }
 
@@ -128,6 +131,7 @@ main {
 .numeric {
   color: ivory;
 }
+
 .numeric-border {
   border: 1px solid #777777;
 }
