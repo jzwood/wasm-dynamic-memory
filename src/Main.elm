@@ -137,20 +137,22 @@ update msg model =
             ( { model | dragged = { dragged | pos = pos } }, Cmd.none )
 
         OnUp c1 ->
-            case ( dragged.instr, dragged.pos, dragged.origin ) of
-                ( instr, _, Nothing ) ->
+            case ( dragged.instr, dragged.origin ) of
+                ( instr, Nothing ) ->
                     ( { model | ast = insert instr c1 ast }, Cmd.none )
 
-                ( i, _, Just c0 ) ->
+                ( instr, Just c0 ) ->
                     let
-                        offset =
-                            if c0 < c1 then
-                                -1
+                        postRemoveCursor =
+                            c1
+                                - (if c0 < c1 then
+                                    1
 
-                            else
-                                0
+                                   else
+                                    0
+                                  )
                     in
-                    ( { model | ast = remove c0 ast |> insert i (c1 + offset) }, Cmd.none )
+                    ( { model | ast = remove c0 ast |> insert instr postRemoveCursor }, Cmd.none )
 
         Nop ->
             ( model, Cmd.none )
@@ -260,9 +262,9 @@ astToHtml cursor ast =
 
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
-                    [ --onEnter (SetCursor (Just line))
-                      --onDown (Down instr (Just line))
-                      style "padding-left" (String.fromInt (i * 2) ++ "ch")
+                    [ onDown (OnDown instr (Just line))
+                    , onUp cursor
+                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , style "height" <| String.fromInt line_height ++ "px"
                     , class "line"
                     , class
