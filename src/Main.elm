@@ -47,7 +47,7 @@ type alias Dragged =
 
 
 type alias Model =
-    { ast : List Instr, dragged : Maybe Dragged, message : String, scrollTop : Float }
+    { ast : List Instr, dragged : Maybe Dragged, message : String, viewport : Dom.Viewport }
 
 
 type Msg
@@ -57,13 +57,18 @@ type Msg
     | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
     | ResetDragged
-    | SetScrollTop Float
+    | SetViewport Dom.Viewport
     | Nop
+
+
+initViewport : Dom.Viewport
+initViewport =
+    { scene = { width = 0, height = 0 }, viewport = { x = 0, y = 0, width = 0, height = 0 } }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, scrollTop = 0 }, Cmd.none )
+    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, viewport = initViewport }, cmdViewport )
 
 
 
@@ -77,8 +82,8 @@ update msg model =
             model
     in
     case msg of
-        SetScrollTop scrollTop ->
-            ( { model | scrollTop = scrollTop }, Cmd.none )
+        SetViewport viewport ->
+            ( { model | viewport = viewport }, Cmd.none )
 
         UpdateArg1 c v ->
             let
@@ -132,7 +137,7 @@ update msg model =
                 meta =
                     getMeta i
             in
-            ( { model | dragged = Just { instr = i, pos = pos, origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdScrollTop )
+            ( { model | dragged = Just { instr = i, pos = pos, origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdViewport )
 
         OnMove pos ->
             case model.dragged of
@@ -201,7 +206,7 @@ onUp maybeCursor =
                     Nop
 
                 Just cursor ->
-                    log "UP" (OnUp cursor)
+                    OnUp cursor
         )
 
 
@@ -235,13 +240,13 @@ onPointerMove =
 --on "scroll" (Decode.succeed OnScroll)
 
 
-cmdScrollTop : Cmd Msg
-cmdScrollTop =
+cmdViewport : Cmd Msg
+cmdViewport =
     Task.attempt
         (\result ->
             case result of
                 Ok viewport ->
-                    SetScrollTop viewport.viewport.y
+                    SetViewport viewport
 
                 Err _ ->
                     Nop
@@ -379,7 +384,7 @@ astToHtml cursor ast =
 
 
 view : Model -> Html Msg
-view { ast, message, dragged, scrollTop } =
+view { ast, message, dragged, viewport } =
     let
         cursor =
             dragged
@@ -389,8 +394,8 @@ view { ast, message, dragged, scrollTop } =
                             ( x, y ) =
                                 pos
                         in
-                        if x > 0 && y > 0 then
-                            Just ((y + scrollTop) / line_height |> round)
+                        if x > 0 && y > 0 && y < viewport.viewport.height then
+                            Just ((y + viewport.viewport.y) / line_height |> round)
 
                         else
                             Nothing
@@ -411,7 +416,7 @@ view { ast, message, dragged, scrollTop } =
             ]
             (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
-        , section [ id "instructions" ] (toHtml cursor instructions)
+        , section [ id "instructions" ] (instrToHtml cursor instructions)
         , viewPaddle dragged
         ]
 
@@ -436,8 +441,8 @@ viewPaddle dragged =
                 [ text meta.button ]
 
 
-toHtml : Maybe Cursor -> List Instr -> List (Html Msg)
-toHtml cursor ins =
+instrToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
+instrToHtml cursor ins =
     List.map
         (\instr ->
             let
@@ -445,9 +450,7 @@ toHtml cursor ins =
                     getMeta instr
             in
             div
-                [ style "user-select" "none"
-                , style "touch-action" "pan-x"
-                , class "instr"
+                [ class "instr"
                 , class (meta.class ++ "-border")
                 , onDown (OnDown instr Nothing)
                 , onUp cursor
