@@ -75,6 +75,13 @@ main {
   /*background-color: #2F3030;*/
 }
 
+#paddle {
+  display: none;
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
 .instr {
   background-color: #3c3c3c;
   padding: 0.25rem 0.5rem;
@@ -162,13 +169,17 @@ main {
 
 .function {
   color: #80e4c9;
-  background-color: #333333;
 }
 
 .function-border {
   border: 1px solid #80e4c9;
 }
 
+.line:not(.empty) > .line-instr {
+  background-color: #333333;
+  padding: 0 1rem;
+  user-select: none;
+}
 
 /************* GENERAL *************/
 

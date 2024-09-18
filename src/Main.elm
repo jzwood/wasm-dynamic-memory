@@ -205,6 +205,11 @@ onUp maybeCursor =
         )
 
 
+onContextmenu : Attribute Msg
+onContextmenu =
+    on "oncontextmenu" (Decode.succeed Nop)
+
+
 onPointerCancel : Attribute Msg
 onPointerCancel =
     Pointer.onCancel (\event -> ResetDragged)
@@ -339,34 +344,32 @@ astToHtml cursor ast =
                     in
                     ( ( c, nextLine, nextIndent ), div (attrs nextIndent) body )
 
-                Get v ->
-                    ( ( c, nextLine, indent )
-                    , div (attrs indent)
-                        [ span [] [ text meta.button ]
-                        , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
-                        , input
-                            [ value v
-                            , class "input"
-                            , attribute "type" "text"
-                            , onInput (UpdateArg1 line)
-                            ]
-                            []
-                        ]
-                    )
-
-                Num n ->
-                    ( ( c, nextLine, indent )
-                    , div (attrs indent)
-                        [ input
-                            [ value (String.fromInt n)
-                            , class "input"
-                            , attribute "type" "text"
-                            , onInput (UpdateArg1 line)
-                            ]
-                            []
-                        ]
-                    )
-
+                --Get v ->
+                --( ( c, nextLine, indent )
+                --, div (attrs indent)
+                --[ span [] [ text meta.button ]
+                --, span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                --, input
+                --[ value v
+                --, class "input"
+                --, attribute "type" "text"
+                --, onInput (UpdateArg1 line)
+                --]
+                --[]
+                --]
+                --)
+                --Num n ->
+                --( ( c, nextLine, indent )
+                --, div (attrs indent)
+                --[ input
+                --[ value (String.fromInt n)
+                --, class "input"
+                --, attribute "type" "text"
+                --, onInput (UpdateArg1 line)
+                --]
+                --[]
+                --]
+                --)
                 op ->
                     neutralLine
         )
@@ -394,7 +397,19 @@ view { ast, message, dragged, scrollTop } =
                     )
     in
     div [ onPointerMove ]
-        [ section [ id "code" ] (astToHtml cursor ast)
+        [ section
+            [ id "code"
+            , preventDefaultOn "contextmenu" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
+            , style "overflow"
+                (case dragged of
+                    Just _ ->
+                        "hidden"
+
+                    Nothing ->
+                        ""
+                )
+            ]
+            (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (toHtml cursor instructions)
         , viewPaddle dragged
@@ -414,9 +429,6 @@ viewPaddle dragged =
             in
             div
                 [ id "paddle"
-                , style "position" "absolute"
-                , style "pointer-events" "none"
-                , style "user-select" "none"
                 , style "left" ((pos |> Tuple.first |> String.fromFloat) ++ "px")
                 , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
                 , class "instr"
