@@ -147,7 +147,7 @@ getMeta instr =
             { button = "«", docs = "bitwise left shift", class = "numeric" }
 
         Num _ ->
-            { button = "num", docs = "constant number", class = "numeric" }
+            { button = "int", docs = "constant integer", class = "numeric" }
 
         Fun _ _ _ ->
             { button = "fun", docs = "function definition", class = "function" }

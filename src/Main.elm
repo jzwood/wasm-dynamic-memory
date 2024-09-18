@@ -232,6 +232,13 @@ onPointerMove =
         (\event -> OnMove event.pointer.clientPos)
 
 
+captureDown : Attribute Msg
+captureDown =
+    Pointer.onWithOptions "pointerdown"
+        { stopPropagation = True, preventDefault = False }
+        (\event -> Nop)
+
+
 
 --onPointerLeave : Attribute Msg
 --onPointerLeave = Pointer.onLeave (\event -> OnMove (0, 0))
@@ -299,8 +306,8 @@ astToHtml cursor ast =
                     , class meta.class
                     ]
 
-                body : List (Html Msg)
-                body =
+                body : List (Html Msg) -> List (Html Msg)
+                body innerHtml =
                     [ span
                         [ onDown (OnDown instr (Just line))
                         , onPointerCancel
@@ -308,61 +315,51 @@ astToHtml cursor ast =
                         , onUp cursor
                         , class "line-instr"
                         ]
-                        [ case instr of
-                            Block l ca ->
-                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
-
-                            Loop l ca ->
-                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
-
-                            If l ca ->
-                                unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] |> text
-
-                            _ ->
-                                meta.button |> text
-                        ]
+                        innerHtml
                     ]
 
-                indentedLine =
-                    ( ( c, nextLine, indent + 1 ), div (attrs indent) body )
+                indentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                indentedLine innerHtml =
+                    ( ( c, nextLine, indent + 1 ), div (attrs indent) (body innerHtml) )
 
-                neutralLine =
-                    ( ( c, nextLine, indent ), div (attrs indent) body )
+                neutralLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                neutralLine innerHtml =
+                    ( ( c, nextLine, indent ), div (attrs indent) (body innerHtml) )
             in
             case instr of
                 Fun _ _ _ ->
-                    indentedLine
+                    indentedLine <| [ text "fun" ]
 
-                Loop _ _ ->
-                    indentedLine
+                Loop l ca ->
+                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
 
-                If _ _ ->
-                    indentedLine
+                If l ca ->
+                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
 
-                Block _ _ ->
-                    indentedLine
+                Block l ca ->
+                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
 
                 End ->
                     let
                         nextIndent =
                             max 0 (indent - 1)
                     in
-                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) body )
+                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) [ text meta.button ] )
 
-                --Get v ->
-                --( ( c, nextLine, indent )
-                --, div (attrs indent)
-                --[ span [] [ text meta.button ]
-                --, span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
-                --, input
-                --[ value v
-                --, class "input"
-                --, attribute "type" "text"
-                --, onInput (UpdateArg1 line)
-                --]
-                --[]
-                --]
-                --)
+                Get v ->
+                    neutralLine
+                        [ span [] [ text meta.button ]
+                        , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                        , input
+                            [ value v
+                            , class "input"
+                            , attribute "type" "text"
+                            , onInput (UpdateArg1 line)
+                            , captureDown
+                            ]
+                            []
+                        ]
+
                 --Num n ->
                 --( ( c, nextLine, indent )
                 --, div (attrs indent)
@@ -376,7 +373,7 @@ astToHtml cursor ast =
                 --]
                 --)
                 op ->
-                    neutralLine
+                    neutralLine <| [ text meta.button ]
         )
         ( cursor, 0, 0 )
         ast
