@@ -54,6 +54,7 @@ type Msg
     = OnUp Cursor
     | UpdateArg1 Cursor String
     | UpdateArg2 Cursor String
+    | UpdateArg3 Cursor String
     | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
     | ResetDragged
@@ -90,8 +91,8 @@ update msg model =
                 updateInstr : Instr -> Instr
                 updateInstr i =
                     case i of
-                        Num n ->
-                            String.filter Char.isDigit v |> String.toInt |> Maybe.withDefault 0 |> Num
+                        Num _ ->
+                            strToInt v |> Num
 
                         Let _ ->
                             Let v
@@ -128,9 +129,40 @@ update msg model =
             in
             ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
 
-        --{ model | ast = replace (Num n) c ast }
         UpdateArg2 c n ->
-            ( model, Cmd.none )
+            let
+                updateInstr : Instr -> Instr
+                updateInstr i =
+                    case i of
+                        Fun v a ca ->
+                            Fun v (strToInt n) ca
+
+                        Block v _ ->
+                            Block v (strToInt n)
+
+                        Loop v _ ->
+                            Loop v (strToInt n)
+
+                        If v _ ->
+                            If v (strToInt n)
+
+                        _ ->
+                            i
+            in
+            ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
+
+        UpdateArg3 c n ->
+            let
+                updateInstr : Instr -> Instr
+                updateInstr i =
+                    case i of
+                        Fun v a _ ->
+                            Fun v a (strToInt n)
+
+                        _ ->
+                            i
+            in
+            ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
 
         OnDown i c pos ->
             let
@@ -280,16 +312,23 @@ cmdViewport =
 -- VIEW
 
 
-inputNode : String -> (String -> Msg) -> Html Msg
-inputNode val oninput =
+inputNode : List (Attribute Msg) -> String -> (String -> Msg) -> Html Msg
+inputNode attrs val oninput =
     input
-        [ value val
-        , class "input"
-        , attribute "type" "text"
-        , onInput oninput
-        , captureDown
-        ]
+        ([ value val
+         , class "input"
+         , attribute "size" (val |> String.length |> max 1 |> String.fromInt)
+         , onInput oninput
+         , captureDown
+         ]
+            ++ attrs
+        )
         []
+
+
+textInput : String -> (String -> Msg) -> Html Msg
+textInput =
+    inputNode [ attribute "type" "text" ]
 
 
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
@@ -337,19 +376,46 @@ astToHtml cursor ast =
                 neutralLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
                 neutralLine innerHtml =
                     ( ( c, nextLine, indent ), div (attrs indent) (body innerHtml) )
+
+                var1 : String -> List (Html Msg)
+                var1 v =
+                    [ span [] [ text meta.button ]
+                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                    , textInput v (UpdateArg1 line)
+                    ]
+
+                var1ca2 : String -> Int -> List (Html Msg)
+                var1ca2 v ca =
+                    [ span [] [ text meta.button ]
+                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                    , textInput v (UpdateArg1 line)
+                    , span [ class "input", style "margin-left" "1ch" ] [ text "+" ]
+                    , textInput (String.fromInt ca) (UpdateArg2 line)
+                    ]
+
+                var1a2ca3 : String -> Int -> Int -> List (Html Msg)
+                var1a2ca3 v a ca =
+                    [ span [] [ text meta.button ]
+                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                    , textInput v (UpdateArg1 line)
+                    , span [ style "margin-left" "1ch" ] [ text "-" ]
+                    , textInput (String.fromInt a) (UpdateArg2 line)
+                    , span [ style "margin-left" "1ch" ] [ text "+" ]
+                    , textInput (String.fromInt ca) (UpdateArg3 line)
+                    ]
             in
             case instr of
-                Fun _ _ _ ->
-                    indentedLine <| [ text "fun" ]
+                Fun v a ca ->
+                    indentedLine <| var1a2ca3 v a ca
 
-                Loop l ca ->
-                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
+                Loop v ca ->
+                    indentedLine <| var1ca2 v ca
 
-                If l ca ->
-                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
+                If v ca ->
+                    indentedLine <| var1ca2 v ca
 
-                Block l ca ->
-                    indentedLine <| [ text <| unwords [ meta.button, "$" ++ l, "+" ++ String.fromInt ca ] ]
+                Block v ca ->
+                    indentedLine <| var1ca2 v ca
 
                 End ->
                     let
@@ -358,17 +424,28 @@ astToHtml cursor ast =
                     in
                     ( ( c, nextLine, nextIndent ), div (attrs nextIndent) [ text meta.button ] )
 
+                Let v ->
+                    neutralLine <| var1 v
+
                 Get v ->
-                    neutralLine
-                        [ span [] [ text meta.button ]
-                        , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
-                        , inputNode v (UpdateArg1 line)
-                        ]
+                    neutralLine <| var1 v
+
+                Set v ->
+                    neutralLine <| var1 v
+
+                Br v ->
+                    neutralLine <| var1 v
+
+                BrIf v ->
+                    neutralLine <| var1 v
+
+                Call v ->
+                    neutralLine <| var1 v
 
                 Num n ->
                     neutralLine
                         [ span [ style "margin-right" "1ch" ] [ text meta.button ]
-                        , inputNode (String.fromInt n) (UpdateArg1 line)
+                        , textInput (String.fromInt n) (UpdateArg1 line)
                         ]
 
                 op ->

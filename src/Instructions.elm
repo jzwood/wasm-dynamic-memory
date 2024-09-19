@@ -83,6 +83,9 @@ getMeta instr =
         EmptyLine ->
             { button = "~", docs = "empty line", class = "empty" }
 
+        Fun _ _ _ ->
+            { button = "fun", docs = "function definition", class = "function" }
+
         Block _ _ ->
             { button = "block", docs = "block $block_label +coarity. breaking to block label jumps out of block.", class = "control-flow" }
 
@@ -149,9 +152,6 @@ getMeta instr =
         Num _ ->
             { button = "num", docs = "constant integer", class = "numeric" }
 
-        Fun _ _ _ ->
-            { button = "fun", docs = "function definition", class = "function" }
-
         Let _ ->
             { button = "let", docs = "local variable declaration", class = "variable" }
 
@@ -167,11 +167,11 @@ getMeta instr =
         BrIf _ ->
             { button = "br_if", docs = "if truthy break to label", class = "control-flow" }
 
-        Return ->
-            { button = "return", docs = "return function", class = "control-flow" }
-
         Call _ ->
             { button = "call", docs = "call function", class = "control-flow" }
+
+        Return ->
+            { button = "return", docs = "return function", class = "control-flow" }
 
         Nop ->
             { button = "nop", docs = "no operation", class = "control-flow" }

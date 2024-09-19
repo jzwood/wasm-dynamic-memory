@@ -19,3 +19,8 @@ replace x index list =
 unwords : List String -> String
 unwords =
     String.join " "
+
+
+strToInt : String -> Int
+strToInt v =
+    String.filter Char.isDigit v |> String.toInt |> Maybe.withDefault 0
