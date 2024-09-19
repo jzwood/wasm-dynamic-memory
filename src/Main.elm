@@ -280,6 +280,18 @@ cmdViewport =
 -- VIEW
 
 
+inputNode : String -> (String -> Msg) -> Html Msg
+inputNode val oninput =
+    input
+        [ value val
+        , class "input"
+        , attribute "type" "text"
+        , onInput oninput
+        , captureDown
+        ]
+        []
+
+
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
     List.Extra.mapAccuml
@@ -350,28 +362,15 @@ astToHtml cursor ast =
                     neutralLine
                         [ span [] [ text meta.button ]
                         , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
-                        , input
-                            [ value v
-                            , class "input"
-                            , attribute "type" "text"
-                            , onInput (UpdateArg1 line)
-                            , captureDown
-                            ]
-                            []
+                        , inputNode v (UpdateArg1 line)
                         ]
 
-                --Num n ->
-                --( ( c, nextLine, indent )
-                --, div (attrs indent)
-                --[ input
-                --[ value (String.fromInt n)
-                --, class "input"
-                --, attribute "type" "text"
-                --, onInput (UpdateArg1 line)
-                --]
-                --[]
-                --]
-                --)
+                Num n ->
+                    neutralLine
+                        [ span [ style "margin-right" "1ch" ] [ text meta.button ]
+                        , inputNode (String.fromInt n) (UpdateArg1 line)
+                        ]
+
                 op ->
                     neutralLine <| [ text meta.button ]
         )

@@ -1,11 +1,7 @@
 :root {
-  --background: #000000;
-  --middle-ground: #262626;
-  --near-ground: white;
-  --background-text: #333;
-  --middle-ground-text: #333;
-  --near-ground-text: #333;
-  --line-height: 1.28rem;
+  --bg-color: #232323;
+  --code-color: #262627;
+  --line-color: #333;
   --bottom-inset: 50px;
 }
 
@@ -37,7 +33,7 @@ input {
 }
 
 body {
-  background-color: #232323;
+  background-color: var(--bg-color);
   color: ivory;
 }
 
@@ -51,7 +47,7 @@ main {
 #code {
   padding: 0 0.25rem 0 1.5rem;
   height: calc((100vh - var(--bottom-inset)) * 2 / 3);
-  background-color: #262627; // #333333;
+  background-color: var(--code-color);
   overflow: auto;
   position: relative;
 }
@@ -101,7 +97,6 @@ main {
 
 .line {
   counter-increment: line;
-  height: var(--line-height);
   padding: 0;
   margin: 0;
   list-style: none;
@@ -126,14 +121,6 @@ main {
 .empty {
   color: #555;
 }
-
-.parent {
-  border: 2px solid #4E4D4E;
-  border-radius: 5px;
-  padding-left: 0.5rem;
-  padding-right: 0.3rem;
-}
-
 
 .numeric {
   color: ivory;
@@ -176,7 +163,7 @@ main {
 }
 
 .line:not(.empty) > .line-instr {
-  background-color: #333333;
+  background-color: var(--line-color);
   padding: 0 1rem;
   user-select: none;
 }
@@ -187,5 +174,5 @@ main {
   color: ivory;
   outline: none;
   border: none;
-  background-color: transparent;
+  background-color: var(--bg-color);
 }
