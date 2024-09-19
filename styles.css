@@ -101,6 +101,8 @@ main {
   padding: 0;
   margin: 0;
   list-style: none;
+  user-select: none;
+  touch-action: none;
 }
 
 .line::before {
@@ -166,7 +168,6 @@ main {
 .line:not(.empty) > .line-instr {
   background-color: var(--line-color);
   padding: 0 1rem;
-  user-select: none;
 }
 
 /************* GENERAL *************/
