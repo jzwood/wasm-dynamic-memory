@@ -377,6 +377,14 @@ astToHtml cursor ast =
                 neutralLine innerHtml =
                     ( ( c, nextLine, indent ), div (attrs indent) (body innerHtml) )
 
+                unindentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                unindentedLine innerHtml =
+                    let
+                        nextIndent =
+                            max 0 (indent - 1)
+                    in
+                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) (body innerHtml) )
+
                 var1 : String -> List (Html Msg)
                 var1 v =
                     [ span [] [ text meta.button ]
@@ -418,11 +426,7 @@ astToHtml cursor ast =
                     indentedLine <| var1ca2 v ca
 
                 End ->
-                    let
-                        nextIndent =
-                            max 0 (indent - 1)
-                    in
-                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) [ text meta.button ] )
+                    unindentedLine <| [ text meta.button ]
 
                 Let v ->
                     neutralLine <| var1 v
