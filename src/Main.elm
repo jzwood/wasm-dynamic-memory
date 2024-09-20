@@ -471,7 +471,7 @@ view { ast, message, dragged, viewport } =
                             ( x, y ) =
                                 pos
                         in
-                        if x > 0 && y > 0 && y < viewport.viewport.height then
+                        if ordered 0 x viewport.viewport.width && ordered 0 y viewport.viewport.height then
                             Just ((y + viewport.viewport.y) / line_height |> round)
 
                         else

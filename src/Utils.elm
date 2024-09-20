@@ -24,3 +24,8 @@ unwords =
 strToInt : String -> Int
 strToInt v =
     String.filter Char.isDigit v |> String.toInt |> Maybe.withDefault 0
+
+
+ordered : Float -> Float -> Float -> Bool
+ordered lo val hi =
+    lo < val && val < hi
