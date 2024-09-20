@@ -54,7 +54,6 @@ type Msg
     = OnUp Cursor
     | UpdateArg1 Cursor String
     | UpdateArg2 Cursor String
-    | UpdateArg3 Cursor String
     | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
     | ResetDragged
@@ -94,6 +93,9 @@ update msg model =
                         Num _ ->
                             strToInt v |> Num
 
+                        Arg _ ->
+                            Arg v
+
                         Let _ ->
                             Let v
 
@@ -112,8 +114,8 @@ update msg model =
                         Call _ ->
                             Call v
 
-                        Fun _ a ca ->
-                            Fun v a ca
+                        Fun _ ca ->
+                            Fun v ca
 
                         Block _ ca ->
                             Block v ca
@@ -134,8 +136,8 @@ update msg model =
                 updateInstr : Instr -> Instr
                 updateInstr i =
                     case i of
-                        Fun v a ca ->
-                            Fun v (strToInt n) ca
+                        Fun v ca ->
+                            Fun v (strToInt n)
 
                         Block v _ ->
                             Block v (strToInt n)
@@ -145,19 +147,6 @@ update msg model =
 
                         If v _ ->
                             If v (strToInt n)
-
-                        _ ->
-                            i
-            in
-            ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
-
-        UpdateArg3 c n ->
-            let
-                updateInstr : Instr -> Instr
-                updateInstr i =
-                    case i of
-                        Fun v a _ ->
-                            Fun v a (strToInt n)
 
                         _ ->
                             i
@@ -331,6 +320,11 @@ textInput =
     inputNode [ attribute "type" "text" ]
 
 
+numberInput : String -> (String -> Msg) -> Html Msg
+numberInput =
+    inputNode [ attribute "type" "number", attribute "min" "0" ]
+
+
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
     List.Extra.mapAccuml
@@ -385,36 +379,24 @@ astToHtml cursor ast =
                     in
                     ( ( c, nextLine, nextIndent ), div (attrs nextIndent) (body innerHtml) )
 
-                var1 : String -> List (Html Msg)
+                var1 : Variable -> List (Html Msg)
                 var1 v =
                     [ span [] [ text meta.button ]
                     , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
                     , textInput v (UpdateArg1 line)
                     ]
 
-                var1ca2 : String -> Int -> List (Html Msg)
+                var1ca2 : Variable -> Int -> List (Html Msg)
                 var1ca2 v ca =
                     [ span [] [ text meta.button ]
                     , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
                     , textInput v (UpdateArg1 line)
-                    , span [ class "input", style "margin-left" "1ch" ] [ text "+" ]
-                    , textInput (String.fromInt ca) (UpdateArg2 line)
-                    ]
-
-                function : String -> Int -> Int -> List (Html Msg)
-                function v a ca =
-                    [ span [] [ text meta.button ]
-                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
-                    , textInput v (UpdateArg1 line)
-                    , span [] [ text "/" ]
-                    , textInput (String.fromInt a) (UpdateArg2 line)
-                    , span [ style "margin-left" "1ch" ] [ text "+" ]
-                    , textInput (String.fromInt ca) (UpdateArg3 line)
+                    , span [ style "margin-left" "1ch" ] [ text <| "+" ++ String.fromInt ca ]
                     ]
             in
             case instr of
-                Fun v a ca ->
-                    indentedLine <| function v a ca
+                Fun v ca ->
+                    indentedLine <| var1ca2 v ca
 
                 Loop v ca ->
                     indentedLine <| var1ca2 v ca
@@ -427,6 +409,9 @@ astToHtml cursor ast =
 
                 End ->
                     unindentedLine <| [ text meta.button ]
+
+                Arg v ->
+                    neutralLine <| var1 v
 
                 Let v ->
                     neutralLine <| var1 v

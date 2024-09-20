@@ -56,10 +56,11 @@ type Instr
     | Rsh
     | Lsh
     | Num Int
+    | Arg Variable
     | Let Variable
     | Set Variable
     | Get Variable
-    | Fun Variable Arity Coarity
+    | Fun Variable Coarity
     | Block Label Coarity
     | Loop Label Coarity
     | If Label Coarity
@@ -87,8 +88,8 @@ getMeta instr =
         EmptyLine ->
             { button = "~", docs = "empty line", signature = Sig 0 0, class = "empty" }
 
-        Fun _ a ca ->
-            { button = "fun", docs = "function definition", signature = Sig a ca, class = "function" }
+        Fun _ ca ->
+            { button = "fun", docs = "function definition", signature = Sig 0 ca, class = "function" }
 
         Block _ ca ->
             { button = "block", docs = "block $block_label +coarity. breaking to block label jumps out of block.", signature = Sig 0 ca, class = "control-flow" }
@@ -155,6 +156,9 @@ getMeta instr =
 
         Num _ ->
             { button = "num", docs = "constant integer", signature = Sig 0 1, class = "numeric" }
+
+        Arg _ ->
+            { button = "arg", docs = "function argument", signature = Sig 0 0, class = "variable" }
 
         Let _ ->
             { button = "let", docs = "local variable declaration", signature = Sig 0 0, class = "variable" }
@@ -227,7 +231,8 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "my_fun" 0 0
+    , Fun "my_fun" 0
+    , Arg "arg"
     , Let "var"
     , Set "var"
     , Get "var"
