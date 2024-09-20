@@ -401,12 +401,12 @@ astToHtml cursor ast =
                     , textInput (String.fromInt ca) (UpdateArg2 line)
                     ]
 
-                var1a2ca3 : String -> Int -> Int -> List (Html Msg)
-                var1a2ca3 v a ca =
+                function : String -> Int -> Int -> List (Html Msg)
+                function v a ca =
                     [ span [] [ text meta.button ]
                     , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
                     , textInput v (UpdateArg1 line)
-                    , span [ style "margin-left" "1ch" ] [ text "-" ]
+                    , span [] [ text "/" ]
                     , textInput (String.fromInt a) (UpdateArg2 line)
                     , span [ style "margin-left" "1ch" ] [ text "+" ]
                     , textInput (String.fromInt ca) (UpdateArg3 line)
@@ -414,7 +414,7 @@ astToHtml cursor ast =
             in
             case instr of
                 Fun v a ca ->
-                    indentedLine <| var1a2ca3 v a ca
+                    indentedLine <| function v a ca
 
                 Loop v ca ->
                     indentedLine <| var1ca2 v ca
