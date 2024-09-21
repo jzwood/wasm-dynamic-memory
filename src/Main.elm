@@ -452,6 +452,16 @@ astToHtml cursor ast =
         |> Tuple.second
 
 
+withinBounds : Position -> CodeDom -> Bool
+withinBounds ( x, y ) { scrollTop, top, left, width, height } =
+    ordered left x (left + width) && ordered top y (top + height)
+
+
+toCursor : Position -> CodeDom -> Cursor
+toCursor ( _, y ) { scrollTop, top, left, width, height } =
+    (y - top + scrollTop) / line_height |> round
+
+
 view : Model -> Html Msg
 view { ast, message, dragged, dom } =
     let
@@ -462,12 +472,9 @@ view { ast, message, dragged, dom } =
                         let
                             ( x, y ) =
                                 pos
-
-                            { scrollTop, top, left, width, height } =
-                                dom
                         in
-                        if ordered left x (left + width) && ordered top y (top + height) then
-                            Just ((y - top + scrollTop) / line_height |> round)
+                        if withinBounds pos dom then
+                            Just (toCursor pos dom)
 
                         else
                             Nothing
