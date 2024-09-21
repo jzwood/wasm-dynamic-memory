@@ -46,8 +46,12 @@ type alias Dragged =
     { instr : Instr, pos : Position, origin : Maybe Cursor }
 
 
+type alias CodeDom =
+    { scrollTop : Float, top : Float, left : Float, width : Float, height : Float }
+
+
 type alias Model =
-    { ast : List Instr, dragged : Maybe Dragged, message : String, viewport : Dom.Viewport }
+    { ast : List Instr, dragged : Maybe Dragged, message : String, dom : CodeDom }
 
 
 type Msg
@@ -57,18 +61,18 @@ type Msg
     | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
     | ResetDragged
-    | SetViewport Dom.Viewport
+    | SetDom CodeDom
     | Nop
 
 
-initViewport : Dom.Viewport
-initViewport =
-    { scene = { width = 0, height = 0 }, viewport = { x = 0, y = 0, width = 0, height = 0 } }
+initDom : CodeDom
+initDom =
+    { scrollTop = 0, top = 0, left = 0, width = 0, height = 0 }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, viewport = initViewport }, cmdViewport )
+    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
 
 
 
@@ -82,8 +86,8 @@ update msg model =
             model
     in
     case msg of
-        SetViewport viewport ->
-            ( { model | viewport = viewport }, Cmd.none )
+        SetDom dom ->
+            ( { model | dom = dom }, Cmd.none )
 
         UpdateArg1 c v ->
             let
@@ -270,16 +274,19 @@ captureDown =
 
 cmdViewport : Cmd Msg
 cmdViewport =
-    Task.attempt
-        (\result ->
-            case result of
-                Ok viewport ->
-                    SetViewport viewport
-
-                Err _ ->
-                    Nop
-        )
+    Task.map2
+        (\{ viewport } { element } -> { scrollTop = viewport.y, top = element.y, left = element.x, width = element.width, height = element.height })
         (Dom.getViewportOf "code")
+        (Dom.getElement "code")
+        |> Task.attempt
+            (\result ->
+                case result of
+                    Ok dom ->
+                        SetDom dom
+
+                    Err _ ->
+                        Nop
+            )
 
 
 
@@ -446,7 +453,7 @@ astToHtml cursor ast =
 
 
 view : Model -> Html Msg
-view { ast, message, dragged, viewport } =
+view { ast, message, dragged, dom } =
     let
         cursor =
             dragged
@@ -455,9 +462,12 @@ view { ast, message, dragged, viewport } =
                         let
                             ( x, y ) =
                                 pos
+
+                            { scrollTop, top, left, width, height } =
+                                dom
                         in
-                        if ordered 0 x viewport.viewport.width && ordered 0 y viewport.viewport.height then
-                            Just ((y + viewport.viewport.y) / line_height |> round)
+                        if ordered left x (left + width) && ordered top y (top + height) then
+                            Just ((y - top + scrollTop) / line_height |> round)
 
                         else
                             Nothing
