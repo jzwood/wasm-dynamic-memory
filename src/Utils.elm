@@ -1,19 +1,20 @@
 module Utils exposing (..)
 
+import List.Extra exposing (removeAt)
+
 
 insert : a -> Int -> List a -> List a
 insert x index list =
     List.take index list ++ x :: List.drop index list
 
 
-remove : Int -> List a -> List a
-remove index list =
-    List.take index list ++ List.drop (index + 1) list
+move : ( a, Int ) -> Int -> List a -> List a
+move ( x, c0 ) c1 xs =
+    if c0 < c1 then
+        removeAt c0 xs |> insert x (c1 - 1)
 
-
-replace : a -> Int -> List a -> List a
-replace x index list =
-    List.take index list ++ x :: List.drop (index + 1) list
+    else
+        removeAt c0 xs |> insert x c1
 
 
 unwords : List String -> String

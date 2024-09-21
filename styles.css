@@ -121,7 +121,18 @@ main {
   box-shadow: inset 0 2px aqua;
 }
 
+.delete {
+  color: orange;
+}
+
+.delete-border {
+  border: 1px solid #FF0000;
+}
+
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: stetch;
   color: #555;
 }
 

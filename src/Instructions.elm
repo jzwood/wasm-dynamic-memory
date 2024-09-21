@@ -39,6 +39,7 @@ type alias Children =
 
 type Instr
     = EmptyLine
+    | DEL
     | Add
     | Sub
     | Mul
@@ -82,139 +83,144 @@ type Instr
     | Write4
 
 
-getMeta : Instr -> { button : String, docs : Docs, signature : Signature, class : String }
+getMeta : Instr -> { button : String, docs : Docs, class : String }
 getMeta instr =
     case instr of
+        DEL ->
+            { button = "DEL", docs = "delete line", class = "delete" }
+
         EmptyLine ->
-            { button = "~", docs = "empty line", signature = Sig 0 0, class = "empty" }
+            { button = "~", docs = "empty line", class = "empty" }
 
         Fun _ ca ->
-            { button = "fun", docs = "function definition", signature = Sig 0 ca, class = "function" }
+            { button = "fun", docs = "function definition", class = "function" }
 
         Block _ ca ->
-            { button = "block", docs = "block $block_label +coarity. breaking to block label jumps out of block.", signature = Sig 0 ca, class = "control-flow" }
+            { button = "block", docs = "block $block_label +coarity. breaking to block label jumps out of block.", class = "control-flow" }
 
         Loop _ ca ->
-            { button = "loop", docs = "breaking to loop label jumps to top of loop", signature = Sig 0 ca, class = "control-flow" }
+            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow" }
 
         If _ ca ->
-            { button = "if", docs = "breaking to if label jumps out of if", signature = Sig 1 ca, class = "control-flow" }
+            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow" }
 
         End ->
-            { button = "end", docs = "end of function, block, loop, or if", signature = Sig 0 0, class = "control-flow" }
+            { button = "end", docs = "end of function, block, loop, or if", class = "control-flow" }
 
         Else ->
-            { button = "else", docs = "else branch of if statement", signature = Sig 0 0, class = "control-flow" }
+            { button = "else", docs = "else branch of if statement", class = "control-flow" }
 
         Add ->
-            { button = "+", docs = "addition", signature = Sig 2 1, class = "numeric" }
+            { button = "+", docs = "addition", class = "numeric" }
 
         Sub ->
-            { button = "sub", docs = "subtraction", signature = Sig 2 1, class = "numeric" }
+            { button = "sub", docs = "subtraction", class = "numeric" }
 
         Mul ->
-            { button = "mult", docs = "multiplication", signature = Sig 2 1, class = "numeric" }
+            { button = "mult", docs = "multiplication", class = "numeric" }
 
         Div ->
-            { button = "div", docs = "division", signature = Sig 2 1, class = "numeric" }
+            { button = "div", docs = "division", class = "numeric" }
 
         Rem ->
-            { button = "%", docs = "remainder", signature = Sig 2 1, class = "numeric" }
+            { button = "%", docs = "remainder", class = "numeric" }
 
         Gt ->
-            { button = ">", docs = "greater than", signature = Sig 2 1, class = "numeric" }
+            { button = ">", docs = "greater than", class = "numeric" }
 
         Gte ->
-            { button = "≥", docs = "greater than or equal", signature = Sig 2 1, class = "numeric" }
+            { button = "≥", docs = "greater than or equal", class = "numeric" }
 
         Lt ->
-            { button = "<", docs = "less than", signature = Sig 2 1, class = "numeric" }
+            { button = "<", docs = "less than", class = "numeric" }
 
         Lte ->
-            { button = "≤", docs = "less than or equal", signature = Sig 2 1, class = "numeric" }
+            { button = "≤", docs = "less than or equal", class = "numeric" }
 
         Eq ->
-            { button = "=", docs = "equal", signature = Sig 2 1, class = "numeric" }
+            { button = "=", docs = "equal", class = "numeric" }
 
         Neq ->
-            { button = "≠", docs = "not equal", signature = Sig 2 1, class = "numeric" }
+            { button = "≠", docs = "not equal", class = "numeric" }
 
         And ->
-            { button = "and", docs = "bitwise/logical and", signature = Sig 2 1, class = "numeric" }
+            { button = "and", docs = "bitwise/logical and", class = "numeric" }
 
         Or ->
-            { button = "or", docs = "bitwise/logical or", signature = Sig 2 1, class = "numeric" }
+            { button = "or", docs = "bitwise/logical or", class = "numeric" }
 
         Xor ->
-            { button = "xor", docs = "bitwise/logical xor", signature = Sig 2 1, class = "numeric" }
+            { button = "xor", docs = "bitwise/logical xor", class = "numeric" }
 
         Rsh ->
-            { button = "»", docs = "bitwise right shift", signature = Sig 2 1, class = "numeric" }
+            { button = "»", docs = "bitwise right shift", class = "numeric" }
 
         Lsh ->
-            { button = "«", docs = "bitwise left shift", signature = Sig 2 1, class = "numeric" }
+            { button = "«", docs = "bitwise left shift", class = "numeric" }
 
         Num _ ->
-            { button = "num", docs = "constant integer", signature = Sig 0 1, class = "numeric" }
+            { button = "num", docs = "constant integer", class = "numeric" }
 
         Arg _ ->
-            { button = "arg", docs = "function argument", signature = Sig 0 0, class = "variable" }
+            { button = "arg", docs = "function argument", class = "variable" }
 
         Let _ ->
-            { button = "let", docs = "local variable declaration", signature = Sig 0 0, class = "variable" }
+            { button = "let", docs = "local variable declaration", class = "variable" }
 
         Set _ ->
-            { button = "set", docs = "set local variable", signature = Sig 1 0, class = "variable" }
+            { button = "set", docs = "set local variable", class = "variable" }
 
         Get _ ->
-            { button = "get", docs = "get local variable", signature = Sig 0 1, class = "variable" }
+            { button = "get", docs = "get local variable", class = "variable" }
 
         Br _ ->
-            { button = "br", docs = "break to label", signature = Sig 1 0, class = "control-flow" }
+            { button = "br", docs = "break to label", class = "control-flow" }
 
         BrIf _ ->
-            { button = "br_if", docs = "if truthy break to label", signature = Sig 1 0, class = "control-flow" }
+            { button = "br_if", docs = "if truthy break to label", class = "control-flow" }
 
         Call _ ->
-            { button = "call", docs = "call function", signature = Sig -1 -1, class = "control-flow" }
+            { button = "call", docs = "call function", class = "control-flow" }
 
         Return ->
-            { button = "return", docs = "return function", signature = Sig 0 0, class = "control-flow" }
+            { button = "return", docs = "return function", class = "control-flow" }
 
         Nop ->
-            { button = "nop", docs = "no operation", signature = Sig 0 0, class = "control-flow" }
+            { button = "nop", docs = "no operation", class = "control-flow" }
 
         Drop ->
-            { button = "drop", docs = "drop top of stack", signature = Sig 1 0, class = "control-flow" }
+            { button = "drop", docs = "drop top of stack", class = "control-flow" }
 
         Malloc ->
-            { button = "malloc", docs = "allocate n bytes", signature = Sig 1 1, class = "memory" }
+            { button = "malloc", docs = "allocate n bytes", class = "memory" }
 
         Free ->
-            { button = "free", docs = "free memory allocated with malloc", signature = Sig 1 0, class = "memory" }
+            { button = "free", docs = "free memory allocated with malloc", class = "memory" }
 
         Read1 ->
-            { button = "read1", docs = "read 1 bytee", signature = Sig 1 1, class = "memory" }
+            { button = "read1", docs = "read 1 bytee", class = "memory" }
 
         Read2 ->
-            { button = "read2", docs = "read 2 bytes", signature = Sig 1 1, class = "memory" }
+            { button = "read2", docs = "read 2 bytes", class = "memory" }
 
         Read4 ->
-            { button = "read4", docs = "read 4 bytes", signature = Sig 1 1, class = "memory" }
+            { button = "read4", docs = "read 4 bytes", class = "memory" }
 
         Write1 ->
-            { button = "write1", docs = "write 1 byte", signature = Sig 2 0, class = "memory" }
+            { button = "write1", docs = "write 1 byte", class = "memory" }
 
         Write2 ->
-            { button = "write2", docs = "write 2 bytes", signature = Sig 2 0, class = "memory" }
+            { button = "write2", docs = "write 2 bytes", class = "memory" }
 
         Write4 ->
-            { button = "write4", docs = "write 4 bytes", signature = Sig 2 0, class = "memory" }
+            { button = "write4", docs = "write 4 bytes", class = "memory" }
 
 
 instructions : List Instr
 instructions =
-    [ Add
+    [ DEL
+    , EmptyLine
+    , Add
     , Sub
     , Mul
     , Div

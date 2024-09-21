@@ -11,7 +11,7 @@ import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
 import Instructions exposing (..)
 import Json.Decode as Decode
-import List.Extra exposing (mapAccuml, updateAt)
+import List.Extra exposing (mapAccuml, removeAt, updateAt)
 import Task
 import Utils exposing (..)
 
@@ -72,7 +72,7 @@ initDom =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = Else :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
+    ( { ast = List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
 
 
 
@@ -179,21 +179,14 @@ update msg model =
 
                 Just dragged ->
                     case ( dragged.instr, dragged.origin ) of
+                        ( DEL, _ ) ->
+                            ( { model | ast = removeAt c1 ast, dragged = Nothing }, Cmd.none )
+
                         ( instr, Nothing ) ->
                             ( { model | ast = insert instr c1 ast, dragged = Nothing }, Cmd.none )
 
                         ( instr, Just c0 ) ->
-                            let
-                                postRemoveCursor =
-                                    c1
-                                        - (if c0 < c1 then
-                                            1
-
-                                           else
-                                            0
-                                          )
-                            in
-                            ( { model | ast = remove c0 ast |> insert instr postRemoveCursor, dragged = Nothing }, Cmd.none )
+                            ( { model | ast = move ( instr, c0 ) c1 ast, dragged = Nothing }, Cmd.none )
 
         ResetDragged ->
             ( { model | dragged = Nothing }, Cmd.none )
@@ -510,6 +503,14 @@ viewPaddle dragged =
             let
                 meta =
                     getMeta instr
+
+                label =
+                    case instr of
+                        DEL ->
+                            "DELETE LINE ⏷"
+
+                        _ ->
+                            meta.button
             in
             div
                 [ id "paddle"
@@ -517,7 +518,7 @@ viewPaddle dragged =
                 , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
                 , class "instr"
                 ]
-                [ text meta.button ]
+                [ text label ]
 
 
 instrToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
@@ -530,7 +531,7 @@ instrToHtml cursor ins =
             in
             div
                 [ class "instr"
-                , class (meta.class ++ "-border")
+                , class meta.class
                 , onDown (OnDown instr Nothing)
                 , onUp cursor
                 , onPointerCancel
