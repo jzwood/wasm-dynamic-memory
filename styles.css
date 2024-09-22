@@ -117,8 +117,8 @@ main {
   left: 0;
 }
 
-.line.cursor {
-  box-shadow: 0 -1px aqua, inset 0 1px aqua;
+.line.cursor, .line.cursor .line-instr {
+  box-shadow: inset 0 2px aqua;
 }
 
 .delete {

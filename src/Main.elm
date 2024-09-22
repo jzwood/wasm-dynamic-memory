@@ -137,20 +137,23 @@ update msg model =
 
         UpdateArg2 c n ->
             let
+                ca =
+                    strToInt n
+
                 updateInstr : Instr -> Instr
                 updateInstr i =
                     case i of
-                        Fun v ca ->
-                            Fun v (strToInt n)
+                        Fun v _ ->
+                            Fun v ca
 
                         Block v _ ->
-                            Block v (strToInt n)
+                            Block v ca
 
                         Loop v _ ->
-                            Loop v (strToInt n)
+                            Loop v ca
 
                         If v _ ->
-                            If v (strToInt n)
+                            If v ca
 
                         _ ->
                             i
@@ -381,17 +384,16 @@ astToHtml cursor ast =
 
                 var1 : Variable -> List (Html Msg)
                 var1 v =
-                    [ span [] [ text meta.button ]
-                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                    [ span [ style "margin-right" "1ch" ] [ text meta.button ]
                     , textInput v (UpdateArg1 line)
                     ]
 
                 var1ca2 : Variable -> Int -> List (Html Msg)
                 var1ca2 v ca =
-                    [ span [] [ text meta.button ]
-                    , span [ class "input", style "margin-left" "1ch" ] [ text "$" ]
+                    [ span [ style "margin-right" "1ch" ] [ text meta.button ]
                     , textInput v (UpdateArg1 line)
-                    , span [ style "margin-left" "1ch" ] [ text <| "+" ++ String.fromInt ca ]
+                    , span [ style "margin-left" "1ch" ] [ text "⊢" ]
+                    , textInput (String.fromInt ca) (UpdateArg2 line)
                     ]
             in
             case instr of
