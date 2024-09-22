@@ -118,11 +118,11 @@ main {
 }
 
 .line.cursor {
-  box-shadow: inset 0 2px aqua;
+  box-shadow: 0 -1px aqua, inset 0 1px aqua;
 }
 
 .delete {
-  color: orange;
+  color: #ff7171;
 }
 
 .delete-border {
