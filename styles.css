@@ -54,10 +54,6 @@ main {
 
 #messages {
   height: calc((100vh - var(--bottom-inset)) / 12);
-  /*padding: 0 0.25rem;*/
-  /*border-width: 1px;*/
-  /*border-color:  #4E4D4E;*/
-  /*border-style: solid;*/
 }
 
 #instructions {
@@ -68,7 +64,6 @@ main {
   gap: 0.25rem;
   height: calc((100vh - var(--bottom-inset)) / 4);
   overflow-x: scroll;
-  /*background-color: #2F3030;*/
 }
 
 #paddle {
@@ -102,7 +97,7 @@ main {
   margin: 0;
   list-style: none;
   user-select: none;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .line::after {
@@ -133,9 +128,6 @@ main {
 }
 
 .empty {
-  display: flex;
-  flex-direction: column;
-  align-items: stetch;
   color: #555;
 }
 
@@ -182,6 +174,9 @@ main {
 .line:not(.empty) > .line-instr {
   background-color: var(--line-color);
   padding: 0 1rem;
+}
+.line.empty > .line-instr {
+  padding-right: 2rem;
 }
 
 /************* GENERAL *************/
