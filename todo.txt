@@ -1,7 +1,2 @@
-- make the following operations work
-  * deletion
-
 - redo formatting for arity/coarity inputs
 - fix function params
-
-TODO

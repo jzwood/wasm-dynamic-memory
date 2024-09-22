@@ -87,7 +87,7 @@ getMeta : Instr -> { button : String, docs : Docs, class : String }
 getMeta instr =
     case instr of
         DEL ->
-            { button = "DEL", docs = "delete line", class = "delete" }
+            { button = "DEL", docs = "delete line below", class = "delete" }
 
         EmptyLine ->
             { button = "~", docs = "empty line", class = "empty" }

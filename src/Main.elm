@@ -503,14 +503,6 @@ viewPaddle dragged =
             let
                 meta =
                     getMeta instr
-
-                label =
-                    case instr of
-                        DEL ->
-                            "DELETE LINE ⏷"
-
-                        _ ->
-                            meta.button
             in
             div
                 [ id "paddle"
@@ -518,7 +510,7 @@ viewPaddle dragged =
                 , style "top" ((pos |> Tuple.second |> String.fromFloat) ++ "px")
                 , class "instr"
                 ]
-                [ text label ]
+                [ text meta.button ]
 
 
 instrToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
