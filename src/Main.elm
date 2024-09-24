@@ -327,6 +327,13 @@ astToHtml cursor ast =
                 nextLine =
                     line + 1
 
+                cursorClass =
+                    if cursor == Just line then
+                        "cursor"
+
+                    else
+                        ""
+
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
                     [ onUp cursor
@@ -334,13 +341,7 @@ astToHtml cursor ast =
                     , style "height" <| String.fromInt line_height ++ "px"
                     , class "line"
                     , class meta.class
-                    , class
-                        (if cursor == Just line then
-                            "cursor"
-
-                         else
-                            ""
-                        )
+                    , class cursorClass
                     ]
 
                 body : List (Html Msg) -> List (Html Msg)

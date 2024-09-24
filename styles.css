@@ -97,7 +97,6 @@ main {
   margin: 0;
   list-style: none;
   user-select: none;
-  /*touch-action: pan-y;*/
 }
 
 .line::after {
