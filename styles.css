@@ -81,12 +81,12 @@ main {
   touch-action: pan-x;
 }
 
-.line:hover,
+.line-instr:hover,
 .instr:hover {
   cursor: grab;
 }
 
-.line:active:hover,
+.line-instr:active:hover,
 .instr:active:hover {
   cursor: grabbing;
 }
