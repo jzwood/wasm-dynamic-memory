@@ -329,9 +329,11 @@ astToHtml cursor ast =
 
                 attrs : Int -> List (Attribute Msg)
                 attrs i =
-                    [ style "padding-left" (String.fromInt (i * 2) ++ "ch")
+                    [ onUp cursor
+                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
                     , style "height" <| String.fromInt line_height ++ "px"
                     , class "line"
+                    , class meta.class
                     , class
                         (if cursor == Just line then
                             "cursor"
@@ -339,16 +341,14 @@ astToHtml cursor ast =
                          else
                             ""
                         )
-                    , class meta.class
                     ]
 
                 body : List (Html Msg) -> List (Html Msg)
                 body innerHtml =
                     [ span
-                        [ onDown (OnDown instr (Just line))
+                        [ class "line-instr"
+                        , onDown (OnDown instr (Just line))
                         , onPointerCancel
-                        , onUp cursor
-                        , class "line-instr"
                         ]
                         innerHtml
                     ]
