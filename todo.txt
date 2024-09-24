@@ -1,2 +1,2 @@
-- redo formatting for arity/coarity inputs
-- fix function params
+- add type checking
+- add codegen

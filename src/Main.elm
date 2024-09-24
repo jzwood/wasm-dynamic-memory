@@ -221,29 +221,17 @@ onDown fxn =
 onUp : Maybe Cursor -> Attribute Msg
 onUp maybeCursor =
     Pointer.onUp
-        (\event ->
-            case maybeCursor of
-                Nothing ->
-                    Nop
-
-                Just cursor ->
-                    OnUp cursor
-        )
+        (\event -> log "UP" (Maybe.map OnUp maybeCursor |> Maybe.withDefault Nop))
 
 
 onContextmenu : Attribute Msg
 onContextmenu =
-    on "oncontextmenu" (Decode.succeed Nop)
+    preventDefaultOn "contextmenu" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
 
 
 onPointerCancel : Attribute Msg
 onPointerCancel =
-    Pointer.onCancel (\event -> ResetDragged)
-
-
-onPointerOut : Attribute Msg
-onPointerOut =
-    Pointer.onOut (\event -> ResetDragged)
+    Pointer.onCancel (\event -> log "CANCEL" ResetDragged)
 
 
 onPointerMove : Attribute Msg
@@ -359,7 +347,6 @@ astToHtml cursor ast =
                     [ span
                         [ onDown (OnDown instr (Just line))
                         , onPointerCancel
-                        , onPointerOut
                         , onUp cursor
                         , class "line-instr"
                         ]
@@ -385,12 +372,14 @@ astToHtml cursor ast =
                 var1 : Variable -> List (Html Msg)
                 var1 v =
                     [ span [ style "margin-right" "1ch" ] [ text meta.button ]
+                    , span [ class "input" ] [ text "$" ]
                     , textInput v (UpdateArg1 line)
                     ]
 
                 var1ca2 : Variable -> Int -> List (Html Msg)
                 var1ca2 v ca =
                     [ span [ style "margin-right" "1ch" ] [ text meta.button ]
+                    , span [ class "input" ] [ text "$" ]
                     , textInput v (UpdateArg1 line)
                     , span [ style "margin-left" "1ch" ] [ text "⊢" ]
                     , textInput (String.fromInt ca) (UpdateArg2 line)
@@ -478,7 +467,7 @@ view { ast, message, dragged, dom } =
     div [ onPointerMove ]
         [ section
             [ id "code"
-            , preventDefaultOn "contextmenu" (Decode.map alwaysPreventDefault (Decode.succeed Nop))
+            , onContextmenu
             , style "overflow"
                 (case dragged of
                     Just _ ->
@@ -529,7 +518,6 @@ instrToHtml cursor ins =
                 , onDown (OnDown instr Nothing)
                 , onUp cursor
                 , onPointerCancel
-                , onPointerOut
                 ]
                 [ meta.button |> text ]
         )
