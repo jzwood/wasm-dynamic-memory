@@ -345,12 +345,15 @@ astToHtml cursor ast =
 
                 body : List (Html Msg) -> List (Html Msg)
                 body innerHtml =
-                    [ span
-                        [ class "line-instr"
-                        , onDown (OnDown instr (Just line))
-                        , onPointerCancel
+                    [ div [ class "flex" ]
+                        [ div
+                            [ class "line-instr"
+                            , onDown (OnDown instr (Just line))
+                            , onPointerCancel
+                            ]
+                            innerHtml
+                        , div [ style "flex-grow" "1" ] []
                         ]
-                        innerHtml
                     ]
 
                 indentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )

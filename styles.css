@@ -97,7 +97,7 @@ main {
   margin: 0;
   list-style: none;
   user-select: none;
-  touch-action: pan-y;
+  /*touch-action: pan-y;*/
 }
 
 .line::after {
@@ -171,12 +171,17 @@ main {
   border: 1px solid #80e4c9;
 }
 
-.line:not(.empty) > .line-instr {
+.line:not(.empty) .line-instr {
   background-color: var(--line-color);
   padding: 0 1rem;
 }
-.line.empty > .line-instr {
+
+.line.empty .line-instr {
   padding-right: 2rem;
+}
+
+.line-instr {
+  touch-action: none;
 }
 
 /************* GENERAL *************/
@@ -186,4 +191,8 @@ main {
   outline: none;
   border: none;
   background-color: var(--bg-color);
+}
+
+.flex {
+  display: flex;
 }
