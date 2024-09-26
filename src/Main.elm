@@ -334,36 +334,33 @@ astToHtml cursor ast =
                     else
                         ""
 
-                attrs : Int -> List (Attribute Msg)
-                attrs i =
-                    [ onUp cursor
-                    , style "padding-left" (String.fromInt (i * 2) ++ "ch")
-                    , style "height" <| String.fromInt line_height ++ "px"
-                    , class "line"
-                    , class meta.class
-                    , class cursorClass
-                    ]
-
-                body : List (Html Msg) -> List (Html Msg)
-                body innerHtml =
-                    [ div [ class "flex" ]
-                        [ div
-                            [ class "line-instr"
-                            , onDown (OnDown instr (Just line))
+                body : Int -> List (Html Msg) -> Html Msg
+                body i innerHtml =
+                    div
+                        [ onUp cursor
+                        , style "height" <| String.fromInt line_height ++ "px"
+                        , class "line"
+                        , class meta.class
+                        , class cursorClass
+                        ]
+                        [ span [ class "line-number" ] [ text <| String.fromInt line ]
+                        , div
+                            [ onDown (OnDown instr (Just line))
                             , onPointerCancel
+                            , class "line-instr"
+                            , style "margin-left" (String.fromInt (i * 2) ++ "ch")
                             ]
                             innerHtml
                         , div [ style "flex-grow" "1" ] []
                         ]
-                    ]
 
                 indentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
                 indentedLine innerHtml =
-                    ( ( c, nextLine, indent + 1 ), div (attrs indent) (body innerHtml) )
+                    ( ( c, nextLine, indent + 1 ), body indent innerHtml )
 
                 neutralLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
                 neutralLine innerHtml =
-                    ( ( c, nextLine, indent ), div (attrs indent) (body innerHtml) )
+                    ( ( c, nextLine, indent ), body indent innerHtml )
 
                 unindentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
                 unindentedLine innerHtml =
@@ -371,21 +368,21 @@ astToHtml cursor ast =
                         nextIndent =
                             max 0 (indent - 1)
                     in
-                    ( ( c, nextLine, nextIndent ), div (attrs nextIndent) (body innerHtml) )
+                    ( ( c, nextLine, nextIndent ), body nextIndent innerHtml )
 
                 var1 : Variable -> List (Html Msg)
                 var1 v =
-                    [ span [ style "margin-right" "1ch" ] [ text meta.button ]
-                    , span [ class "input" ] [ text "$" ]
+                    [ span [ class "mr1" ] [ text meta.button ]
+                    , textInput "$" (\_ -> Nop)
                     , textInput v (UpdateArg1 line)
                     ]
 
                 var1ca2 : Variable -> Int -> List (Html Msg)
                 var1ca2 v ca =
-                    [ span [ style "margin-right" "1ch" ] [ text meta.button ]
-                    , span [ class "input" ] [ text "$" ]
+                    [ span [ class "mr1" ] [ text meta.button ]
+                    , textInput "$" (\_ -> Nop)
                     , textInput v (UpdateArg1 line)
-                    , span [ style "margin-left" "1ch" ] [ text "⊢" ]
+                    , textInput " ^" (\_ -> Nop)
                     , textInput (String.fromInt ca) (UpdateArg2 line)
                     ]
             in
@@ -428,7 +425,7 @@ astToHtml cursor ast =
 
                 Num n ->
                     neutralLine
-                        [ span [ style "margin-right" "1ch" ] [ text meta.button ]
+                        [ span [ class "mr1" ] [ text meta.button ]
                         , textInput (String.fromInt n) (UpdateArg1 line)
                         ]
 
