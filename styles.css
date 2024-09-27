@@ -37,6 +37,25 @@ body {
   color: ivory;
 }
 
+header {
+  /*display: flex;*/
+  /*justify-content: flex-end;*/
+  position: relative;
+}
+
+button.windows-95 {
+  color: #000;
+  background-color: #c0c0c0;
+  border-color: #a0a0a0;
+  cursor: pointer;
+  font-weight: 400;
+  text-align: center;
+  font-size: large;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
 main {
   width: 100%;
   max-width: 520px;

@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Browser.Dom as Dom
 import Debug exposing (log)
-import Html exposing (Attribute, Html, aside, button, div, input, section, span, text)
+import Html exposing (Attribute, Html, aside, button, div, header, input, section, span, text)
 import Html.Attributes exposing (attribute, class, draggable, id, style, value)
 import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Html.Events.Extra.Mouse as Mouse
@@ -13,6 +13,7 @@ import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, removeAt, updateAt)
 import Task
+import Typecheck exposing (..)
 import Utils exposing (..)
 
 
@@ -316,10 +317,53 @@ numberInput =
     inputNode [ attribute "type" "number", attribute "min" "0" ]
 
 
+indentLines : List Instr -> List ( Int, Cursor, Instr )
+indentLines ast =
+    List.Extra.mapAccuml
+        (\( line, indent ) instr ->
+            let
+                nextLine =
+                    line + 1
+
+                indentedLine : ( Cursor, Int, Instr )
+                indentedLine =
+                    ( nextLine, indent + 1, instr )
+
+                neutralLine : ( Cursor, Int, Instr )
+                neutralLine =
+                    ( nextLine, indent, instr )
+
+                unindentedLine : ( Cursor, Int, instr )
+                unindentedLine =
+                    ( nextLine, indent - 1, instr )
+            in
+            case instr of
+                Fun _ _ ->
+                    indentedLine
+
+                Loop _ _ ->
+                    indentedLine
+
+                If _ _ ->
+                    indentedLine
+
+                Block _ _ ->
+                    indentedLine
+
+                End ->
+                    unindentedLine
+
+                op ->
+                    neutralLine
+        )
+        ( 0, 0 )
+        ast
+
+
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml cursor ast =
     List.Extra.mapAccuml
-        (\( c, line, indent ) instr ->
+        (\( line, indent ) instr ->
             let
                 meta =
                     getMeta instr
@@ -354,21 +398,21 @@ astToHtml cursor ast =
                         , div [ style "flex-grow" "1" ] []
                         ]
 
-                indentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                indentedLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
                 indentedLine innerHtml =
-                    ( ( c, nextLine, indent + 1 ), body indent innerHtml )
+                    ( ( nextLine, indent + 1 ), body indent innerHtml )
 
-                neutralLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                neutralLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
                 neutralLine innerHtml =
-                    ( ( c, nextLine, indent ), body indent innerHtml )
+                    ( ( nextLine, indent ), body indent innerHtml )
 
-                unindentedLine : List (Html Msg) -> ( ( Maybe Cursor, Cursor, Int ), Html Msg )
+                unindentedLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
                 unindentedLine innerHtml =
                     let
                         nextIndent =
                             max 0 (indent - 1)
                     in
-                    ( ( c, nextLine, nextIndent ), body nextIndent innerHtml )
+                    ( ( nextLine, nextIndent ), body nextIndent innerHtml )
 
                 var1 : Variable -> List (Html Msg)
                 var1 v =
@@ -432,7 +476,7 @@ astToHtml cursor ast =
                 op ->
                     neutralLine <| [ text meta.button ]
         )
-        ( cursor, 0, 0 )
+        ( 0, 0 )
         ast
         |> Tuple.second
 
@@ -466,7 +510,8 @@ view { ast, message, dragged, dom } =
                     )
     in
     div [ onPointerMove ]
-        [ section
+        [ header [] [ button [ class "windows-95" ] [ text "WAT" ] ]
+        , section
             [ id "code"
             , onContextmenu
             , style "overflow"
