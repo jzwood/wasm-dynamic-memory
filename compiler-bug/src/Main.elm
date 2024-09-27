@@ -8,38 +8,14 @@ main =
     text "Hello!"
 
 
-type Instr
-    = EmptyLine
-    | Block String Int
-    | End
-
-
-indentLines : List Instr -> List ( Int, Instr )
-indentLines ast =
+func =
     List.Extra.mapAccuml
-        (\indent instr ->
+        (\a b ->
             let
-                indentedLine : ( Int, Instr )
-                indentedLine =
-                    ( indent + 1, instr )
-
-                neutralLine : ( Int, Instr )
-                neutralLine =
-                    ( indent, instr )
-
-                unindentedLine : ( Int, instr )
-                unindentedLine =
-                    ( indent - 1, instr )
+                return : ( Int, x )
+                return =
+                    ( a, b )
             in
-            case instr of
-                Block _ _ ->
-                    indentedLine
-
-                End ->
-                    unindentedLine
-
-                op ->
-                    neutralLine
+            return
         )
         ( 0, 0 )
-        ast

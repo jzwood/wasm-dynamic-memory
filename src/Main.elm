@@ -317,7 +317,7 @@ numberInput =
     inputNode [ attribute "type" "number", attribute "min" "0" ]
 
 
-indentLines : List Instr -> List ( Int, Cursor, Instr )
+indentLines : List Instr -> ( ( Int, Cursor ), List ( Int, Cursor, Instr ) )
 indentLines ast =
     List.Extra.mapAccuml
         (\( line, indent ) instr ->
@@ -325,17 +325,14 @@ indentLines ast =
                 nextLine =
                     line + 1
 
-                indentedLine : ( Cursor, Int, Instr )
                 indentedLine =
-                    ( nextLine, indent + 1, instr )
+                    ( ( nextLine, indent + 1 ), ( line, indent, instr ) )
 
-                neutralLine : ( Cursor, Int, Instr )
                 neutralLine =
-                    ( nextLine, indent, instr )
+                    ( ( nextLine, indent ), ( line, indent, instr ) )
 
-                unindentedLine : ( Cursor, Int, instr )
                 unindentedLine =
-                    ( nextLine, indent - 1, instr )
+                    ( ( nextLine, indent - 1 ), ( line, indent - 1, instr ) )
             in
             case instr of
                 Fun _ _ ->
