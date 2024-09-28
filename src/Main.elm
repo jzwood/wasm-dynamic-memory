@@ -40,6 +40,11 @@ type alias Position =
     ( Float, Float )
 
 
+type Mode
+    = Code
+    | WAT
+
+
 
 -- MODEL
 
@@ -53,7 +58,7 @@ type alias CodeDom =
 
 
 type alias Model =
-    { ast : List Instr, dragged : Maybe Dragged, message : String, dom : CodeDom }
+    { mode : Mode, ast : List Instr, dragged : Maybe Dragged, message : String, dom : CodeDom }
 
 
 type Msg
@@ -64,6 +69,7 @@ type Msg
     | OnMove Position
     | ResetDragged
     | SetDom CodeDom
+    | ToggleMode
     | Nop
 
 
@@ -74,7 +80,17 @@ initDom =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ast = List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
+    ( { mode = Code, ast = List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
+
+
+toggleMode : Mode -> Mode
+toggleMode mode =
+    case mode of
+        Code ->
+            WAT
+
+        WAT ->
+            Code
 
 
 
@@ -84,7 +100,7 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { ast } =
+        { ast, mode } =
             model
     in
     case msg of
@@ -195,6 +211,9 @@ update msg model =
 
         ResetDragged ->
             ( { model | dragged = Nothing }, Cmd.none )
+
+        ToggleMode ->
+            ( { model | mode = toggleMode mode }, Cmd.none )
 
         Nop ->
             ( model, Cmd.none )
@@ -473,7 +492,7 @@ toCursor ( _, y ) { scrollTop, top, left, width, height } =
 
 
 view : Model -> Html Msg
-view { ast, message, dragged, dom } =
+view { ast, message, dragged, dom, mode } =
     let
         cursor =
             dragged
@@ -491,7 +510,16 @@ view { ast, message, dragged, dom } =
                     )
     in
     div [ onPointerMove ]
-        [ header [] [ button [ class "windows-95" ] [ eyeSlash, span [ class "ml1" ] [ text "WAT" ] ] ]
+        [ header []
+            [ button [ class "windows-95", onClick ToggleMode ]
+                [ if mode == Code then
+                    eye
+
+                  else
+                    eyeSlash
+                , span [ class "ml1" ] [ text "WAT" ]
+                ]
+            ]
         , section
             [ id "code"
             , onContextmenu
