@@ -44,16 +44,20 @@ header {
 }
 
 button.windows-95 {
-  color: #000;
-  background-color: #c0c0c0;
-  border-color: #a0a0a0;
+  background-color: var(--bg-color);
+  color: ivory;
+  fill: ivory;
+  padding: 2px 5px;
+  border: 1px solid gray;
+  border-radius: 3px;
   cursor: pointer;
   font-weight: 400;
   text-align: center;
-  font-size: large;
+  font-size: small;
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  z-index: 1;
 }
 
 main {
@@ -64,7 +68,6 @@ main {
 }
 
 #code {
-  padding: 0 0.25rem 0 1.5rem;
   height: calc((100vh - var(--bottom-inset)) * 2 / 3);
   background-color: var(--code-color);
   overflow: auto;
@@ -73,7 +76,16 @@ main {
 
 #messages {
   height: calc((100vh - var(--bottom-inset)) / 12);
+  font-size: 0.85rem;
+  overflow: auto;
 }
+
+@media (width >= 400px) {
+  #messages {
+    font-size: 1rem;
+  }
+}
+
 
 #instructions {
   padding: 0.25rem;

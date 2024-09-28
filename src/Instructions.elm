@@ -96,7 +96,7 @@ getMeta instr =
             { button = "fun", docs = "function definition", class = "function" }
 
         Block _ ca ->
-            { button = "block", docs = "block $block_label +coarity. breaking to block label jumps out of block.", class = "control-flow" }
+            { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow" }
 
         Loop _ ca ->
             { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow" }

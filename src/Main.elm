@@ -9,6 +9,7 @@ import Html.Events exposing (on, onClick, onInput, preventDefaultOn)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Events.Extra.Pointer as Pointer
 import Html.Events.Extra.Touch as Touch
+import Icons exposing (..)
 import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, removeAt, updateAt)
@@ -166,7 +167,7 @@ update msg model =
                 meta =
                     getMeta i
             in
-            ( { model | dragged = Just { instr = i, pos = pos, origin = c }, message = String.concat [ "(", meta.button, ") ", meta.docs ] }, cmdViewport )
+            ( { model | dragged = Just { instr = i, pos = pos, origin = c }, message = meta.docs }, cmdViewport )
 
         OnMove pos ->
             case model.dragged of
@@ -490,7 +491,7 @@ view { ast, message, dragged, dom } =
                     )
     in
     div [ onPointerMove ]
-        [ header [] [ button [ class "windows-95" ] [ text "WAT" ] ]
+        [ header [] [ button [ class "windows-95" ] [ eyeSlash, span [ class "ml1" ] [ text "WAT" ] ] ]
         , section
             [ id "code"
             , onContextmenu
