@@ -317,8 +317,8 @@ numberInput =
     inputNode [ attribute "type" "number", attribute "min" "0" ]
 
 
-indentLines : List Instr -> ( ( Int, Cursor ), List ( Int, Cursor, Instr ) )
-indentLines ast =
+indentLines : (Int -> Cursor -> Instr -> Html Msg) -> List Instr -> List (Html Msg)
+indentLines instrToHtml =
     List.Extra.mapAccuml
         (\( line, indent ) instr ->
             let
@@ -326,13 +326,13 @@ indentLines ast =
                     line + 1
 
                 indentedLine =
-                    ( ( nextLine, indent + 1 ), ( line, indent, instr ) )
+                    ( ( nextLine, indent + 1 ), instrToHtml line indent instr )
 
                 neutralLine =
-                    ( ( nextLine, indent ), ( line, indent, instr ) )
+                    ( ( nextLine, indent ), instrToHtml line indent instr )
 
                 unindentedLine =
-                    ( ( nextLine, indent - 1 ), ( line, indent - 1, instr ) )
+                    ( ( nextLine, indent - 1 ), instrToHtml line (indent - 1) instr )
             in
             case instr of
                 Fun _ _ ->
@@ -354,13 +354,13 @@ indentLines ast =
                     neutralLine
         )
         ( 0, 0 )
-        ast
+        >> Tuple.second
 
 
 astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
-astToHtml cursor ast =
-    List.Extra.mapAccuml
-        (\( line, indent ) instr ->
+astToHtml cursor =
+    indentLines
+        (\line indent instr ->
             let
                 meta =
                     getMeta instr
@@ -395,87 +395,70 @@ astToHtml cursor ast =
                         , div [ style "flex-grow" "1" ] []
                         ]
 
-                indentedLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
-                indentedLine innerHtml =
-                    ( ( nextLine, indent + 1 ), body indent innerHtml )
-
-                neutralLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
-                neutralLine innerHtml =
-                    ( ( nextLine, indent ), body indent innerHtml )
-
-                unindentedLine : List (Html Msg) -> ( ( Cursor, Int ), Html Msg )
-                unindentedLine innerHtml =
-                    let
-                        nextIndent =
-                            max 0 (indent - 1)
-                    in
-                    ( ( nextLine, nextIndent ), body nextIndent innerHtml )
-
-                var1 : Variable -> List (Html Msg)
+                var1 : Variable -> Html Msg
                 var1 v =
-                    [ span [ class "mr1" ] [ text meta.button ]
-                    , textInput "$" (\_ -> Nop)
-                    , textInput v (UpdateArg1 line)
-                    ]
+                    body indent
+                        [ span [ class "mr1" ] [ text meta.button ]
+                        , textInput "$" (\_ -> Nop)
+                        , textInput v (UpdateArg1 line)
+                        ]
 
-                var1ca2 : Variable -> Int -> List (Html Msg)
+                var1ca2 : Variable -> Int -> Html Msg
                 var1ca2 v ca =
-                    [ span [ class "mr1" ] [ text meta.button ]
-                    , textInput "$" (\_ -> Nop)
-                    , textInput v (UpdateArg1 line)
-                    , textInput " ^" (\_ -> Nop)
-                    , textInput (String.fromInt ca) (UpdateArg2 line)
-                    ]
+                    body indent
+                        [ span [ class "mr1" ] [ text meta.button ]
+                        , textInput "$" (\_ -> Nop)
+                        , textInput v (UpdateArg1 line)
+                        , textInput " ^" (\_ -> Nop)
+                        , textInput (String.fromInt ca) (UpdateArg2 line)
+                        ]
             in
             case instr of
                 Fun v ca ->
-                    indentedLine <| var1ca2 v ca
+                    var1ca2 v ca
 
                 Loop v ca ->
-                    indentedLine <| var1ca2 v ca
+                    var1ca2 v ca
 
                 If v ca ->
-                    indentedLine <| var1ca2 v ca
+                    var1ca2 v ca
 
                 Block v ca ->
-                    indentedLine <| var1ca2 v ca
+                    var1ca2 v ca
 
                 End ->
-                    unindentedLine <| [ text meta.button ]
+                    body indent [ text meta.button ]
 
                 Arg v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Let v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Get v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Set v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Br v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 BrIf v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Call v ->
-                    neutralLine <| var1 v
+                    var1 v
 
                 Num n ->
-                    neutralLine
+                    body indent
                         [ span [ class "mr1" ] [ text meta.button ]
                         , textInput (String.fromInt n) (UpdateArg1 line)
                         ]
 
                 op ->
-                    neutralLine <| [ text meta.button ]
+                    body indent <| [ text meta.button ]
         )
-        ( 0, 0 )
-        ast
-        |> Tuple.second
 
 
 withinBounds : Position -> CodeDom -> Bool
@@ -522,7 +505,7 @@ view { ast, message, dragged, dom } =
             ]
             (astToHtml cursor ast)
         , section [ id "messages" ] [ text message ]
-        , section [ id "instructions" ] (instrToHtml cursor instructions)
+        , section [ id "instructions" ] (menuInstrToHtml cursor instructions)
         , viewPaddle dragged
         ]
 
@@ -547,8 +530,8 @@ viewPaddle dragged =
                 [ text meta.button ]
 
 
-instrToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
-instrToHtml cursor ins =
+menuInstrToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
+menuInstrToHtml cursor ins =
     List.map
         (\instr ->
             let
