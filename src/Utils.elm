@@ -27,6 +27,11 @@ strToInt v =
     String.filter Char.isDigit v |> String.toInt |> Maybe.withDefault 0
 
 
+strToLabel : String -> String
+strToLabel =
+    String.filter Char.isAlphaNum
+
+
 ordered : Float -> Float -> Float -> Bool
 ordered lo val hi =
     lo < val && val < hi

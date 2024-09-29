@@ -394,8 +394,12 @@ astToHtml mode cursor ast =
 
 astToWat : Cursor -> Int -> Instr -> Html Msg
 astToWat line indent instr =
+    let
+        meta =
+            getMeta instr
+    in
     div []
-        [ text "body"
+        [ text meta.wat
         ]
 
 
@@ -440,7 +444,7 @@ astToCode cursor line indent instr =
             body indent
                 [ span [ class "mr1" ] [ text meta.button ]
                 , textInput "$" (\_ -> Nop)
-                , textInput v (UpdateArg1 line)
+                , textInput (strToLabel v) (UpdateArg1 line)
                 ]
 
         var1ca2 : Variable -> Int -> Html Msg
@@ -448,7 +452,7 @@ astToCode cursor line indent instr =
             body indent
                 [ span [ class "mr1" ] [ text meta.button ]
                 , textInput "$" (\_ -> Nop)
-                , textInput v (UpdateArg1 line)
+                , textInput (strToLabel v) (UpdateArg1 line)
                 , textInput " ^" (\_ -> Nop)
                 , textInput (String.fromInt ca) (UpdateArg2 line)
                 ]

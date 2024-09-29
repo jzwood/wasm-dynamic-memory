@@ -4,7 +4,7 @@
 
   ;; create a function that takes in a number as a param,
   ;; and logs that number if it's not equal to 100.
-  (func (export "log_if_not_100") (param $num i32)
+  (func (export "log_if_not_100") (param $1num i32)
     i32.const 0
     i32.const 0
     i32.const 0
