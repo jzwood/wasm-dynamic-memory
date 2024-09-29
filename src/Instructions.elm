@@ -86,7 +86,7 @@ type Instr
 
 coarityToWat : Int -> String
 coarityToWat ca =
-    ""
+    List.repeat ca "(result i32)" |> String.join "\n "
 
 
 getMeta : Instr -> { button : String, docs : Docs, class : String, wat : String }
@@ -102,7 +102,7 @@ getMeta instr =
             { button = "fun", docs = "function definition", class = "function", wat = "(func" }
 
         Block label ca ->
-            { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow", wat = unwords [ "block", "$" ++ label, coarityToWat ca ] }
+            { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow", wat = String.concat [ "block ", "$", label, "\n ", coarityToWat ca ] }
 
         Loop _ ca ->
             { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow", wat = "" }
@@ -114,64 +114,64 @@ getMeta instr =
             { button = "end", docs = "end of function, block, loop, or if", class = "control-flow", wat = "" }
 
         Else ->
-            { button = "else", docs = "else branch of if statement", class = "control-flow", wat = "" }
+            { button = "else", docs = "else branch of if statement", class = "control-flow", wat = "else" }
 
         Add ->
-            { button = "+", docs = "addition", class = "numeric", wat = "" }
+            { button = "+", docs = "addition", class = "numeric", wat = "i32.add" }
 
         Sub ->
-            { button = "sub", docs = "subtraction", class = "numeric", wat = "" }
+            { button = "sub", docs = "subtraction", class = "numeric", wat = "i32.sub" }
 
         Mul ->
-            { button = "mult", docs = "multiplication", class = "numeric", wat = "" }
+            { button = "mult", docs = "multiplication", class = "numeric", wat = "i32.mul" }
 
         Div ->
-            { button = "div", docs = "division", class = "numeric", wat = "" }
+            { button = "div", docs = "division", class = "numeric", wat = "i32.div_s" }
 
         Rem ->
-            { button = "%", docs = "remainder", class = "numeric", wat = "" }
+            { button = "%", docs = "remainder", class = "numeric", wat = "i32.rem" }
 
         Gt ->
-            { button = ">", docs = "greater than", class = "numeric", wat = "" }
+            { button = ">", docs = "greater than", class = "numeric", wat = "i32.gt" }
 
         Gte ->
-            { button = "≥", docs = "greater than or equal", class = "numeric", wat = "" }
+            { button = "≥", docs = "greater than or equal", class = "numeric", wat = "i32.ge" }
 
         Lt ->
-            { button = "<", docs = "less than", class = "numeric", wat = "" }
+            { button = "<", docs = "less than", class = "numeric", wat = "i32.lt" }
 
         Lte ->
-            { button = "≤", docs = "less than or equal", class = "numeric", wat = "" }
+            { button = "≤", docs = "less than or equal", class = "numeric", wat = "i32.le" }
 
         Eq ->
-            { button = "=", docs = "equal", class = "numeric", wat = "" }
+            { button = "=", docs = "equal", class = "numeric", wat = "i32.eq" }
 
         Neq ->
-            { button = "≠", docs = "not equal", class = "numeric", wat = "" }
+            { button = "≠", docs = "not equal", class = "numeric", wat = "i32.neq" }
 
         And ->
-            { button = "and", docs = "bitwise/logical and", class = "numeric", wat = "" }
+            { button = "and", docs = "bitwise/logical and", class = "numeric", wat = "i32.and" }
 
         Or ->
-            { button = "or", docs = "bitwise/logical or", class = "numeric", wat = "" }
+            { button = "or", docs = "bitwise/logical or", class = "numeric", wat = "i32.or" }
 
         Xor ->
-            { button = "xor", docs = "bitwise/logical xor", class = "numeric", wat = "" }
+            { button = "xor", docs = "bitwise/logical xor", class = "numeric", wat = "i32.xor" }
 
         Rsh ->
-            { button = "»", docs = "bitwise right shift", class = "numeric", wat = "" }
+            { button = "»", docs = "bitwise right shift", class = "numeric", wat = "i32.shr_s" }
 
         Lsh ->
-            { button = "«", docs = "bitwise left shift", class = "numeric", wat = "" }
+            { button = "«", docs = "bitwise left shift", class = "numeric", wat = "i32.shl" }
 
-        Num _ ->
-            { button = "num", docs = "constant integer", class = "numeric", wat = "" }
+        Num n ->
+            { button = "num", docs = "constant integer", class = "numeric", wat = unwords [ "i32.const", String.fromInt n ] }
 
-        Arg _ ->
-            { button = "arg", docs = "function argument", class = "variable", wat = "" }
+        Arg a ->
+            { button = "arg", docs = "function argument", class = "variable", wat = String.concat [ "(param $", a, " i32)" ] }
 
-        Let _ ->
-            { button = "let", docs = "local variable declaration", class = "variable", wat = "" }
+        Let label ->
+            { button = "let", docs = "local variable declaration", class = "variable", wat = String.concat [ "(local $", label, " i32)" ] }
 
         Set _ ->
             { button = "set", docs = "set local variable", class = "variable", wat = "" }

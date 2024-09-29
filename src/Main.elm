@@ -80,7 +80,7 @@ initDom =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { mode = Code, ast = List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
+    ( { mode = Code, ast = Block "cat" 3 :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
 
 
 toggleMode : Mode -> Mode
@@ -384,9 +384,9 @@ astToHtml mode cursor ast =
             indentLines (astToCode cursor) ast
 
         WAT ->
-            [ div []
+            [ div [ id "wat" ]
                 [ div [] [ text "(module" ]
-                , div [ class "ml1" ] (indentLines astToWat ast)
+                , div [ class "ml2" ] (indentLines astToWat ast)
                 , div [] [ text ")" ]
                 ]
             ]
@@ -398,7 +398,7 @@ astToWat line indent instr =
         meta =
             getMeta instr
     in
-    div []
+    div [ class "pre-wrap" ]
         [ text meta.wat
         ]
 

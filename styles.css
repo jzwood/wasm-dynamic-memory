@@ -71,6 +71,10 @@ main {
   position: relative;
 }
 
+#wat {
+  font-size: smaller;
+}
+
 #messages {
   height: calc((100vh - var(--bottom-inset)) / 12);
   font-size: 0.85rem;
@@ -98,6 +102,10 @@ main {
   position: absolute;
   pointer-events: none;
   user-select: none;
+}
+
+button.wat {
+  opacity: 0.7;
 }
 
 button.wat, .instr {
@@ -248,4 +256,8 @@ button.wat, .instr {
 
 .items-center {
   align-items: center;
+}
+
+.pre-wrap {
+  white-space: pre-wrap;
 }
