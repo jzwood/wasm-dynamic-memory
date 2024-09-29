@@ -377,108 +377,127 @@ indentLines instrToHtml =
         >> Tuple.second
 
 
-astToHtml : Maybe Cursor -> List Instr -> List (Html Msg)
-astToHtml cursor =
-    indentLines
-        (\line indent instr ->
-            let
-                meta =
-                    getMeta instr
+astToHtml : Mode -> Maybe Cursor -> List Instr -> List (Html Msg)
+astToHtml mode cursor ast =
+    case mode of
+        Code ->
+            indentLines (astToCode cursor) ast
 
-                nextLine =
-                    line + 1
+        WAT ->
+            [ div []
+                [ div [] [ text "(module" ]
+                , div [ class "ml1" ] (indentLines astToWat ast)
+                , div [] [ text ")" ]
+                ]
+            ]
 
-                cursorClass =
-                    if cursor == Just line then
-                        "cursor"
 
-                    else
-                        ""
+astToWat : Cursor -> Int -> Instr -> Html Msg
+astToWat line indent instr =
+    div []
+        [ text "body"
+        ]
 
-                body : Int -> List (Html Msg) -> Html Msg
-                body i innerHtml =
-                    div
-                        [ onUp cursor
-                        , style "height" <| String.fromInt line_height ++ "px"
-                        , class "line"
-                        , class meta.class
-                        , class cursorClass
-                        ]
-                        [ span [ class "line-number" ] [ text <| String.fromInt line ]
-                        , div
-                            [ onDown (OnDown instr (Just line))
-                            , onPointerCancel
-                            , class "line-instr"
-                            , style "margin-left" (String.fromInt (i * 2) ++ "ch")
-                            ]
-                            innerHtml
-                        , div [ style "flex-grow" "1" ] []
-                        ]
 
-                var1 : Variable -> Html Msg
-                var1 v =
-                    body indent
-                        [ span [ class "mr1" ] [ text meta.button ]
-                        , textInput "$" (\_ -> Nop)
-                        , textInput v (UpdateArg1 line)
-                        ]
+astToCode : Maybe Cursor -> Cursor -> Int -> Instr -> Html Msg
+astToCode cursor line indent instr =
+    let
+        meta =
+            getMeta instr
 
-                var1ca2 : Variable -> Int -> Html Msg
-                var1ca2 v ca =
-                    body indent
-                        [ span [ class "mr1" ] [ text meta.button ]
-                        , textInput "$" (\_ -> Nop)
-                        , textInput v (UpdateArg1 line)
-                        , textInput " ^" (\_ -> Nop)
-                        , textInput (String.fromInt ca) (UpdateArg2 line)
-                        ]
-            in
-            case instr of
-                Fun v ca ->
-                    var1ca2 v ca
+        nextLine =
+            line + 1
 
-                Loop v ca ->
-                    var1ca2 v ca
+        cursorClass =
+            if cursor == Just line then
+                "cursor"
 
-                If v ca ->
-                    var1ca2 v ca
+            else
+                ""
 
-                Block v ca ->
-                    var1ca2 v ca
+        body : Int -> List (Html Msg) -> Html Msg
+        body i innerHtml =
+            div
+                [ onUp cursor
+                , style "height" <| String.fromInt line_height ++ "px"
+                , class "line"
+                , class meta.class
+                , class cursorClass
+                ]
+                [ span [ class "line-number" ] [ text <| String.fromInt line ]
+                , div
+                    [ onDown (OnDown instr (Just line))
+                    , onPointerCancel
+                    , class "line-instr"
+                    , style "margin-left" (String.fromInt (i * 2) ++ "ch")
+                    ]
+                    innerHtml
+                , div [ style "flex-grow" "1" ] []
+                ]
 
-                End ->
-                    body indent [ text meta.button ]
+        var1 : Variable -> Html Msg
+        var1 v =
+            body indent
+                [ span [ class "mr1" ] [ text meta.button ]
+                , textInput "$" (\_ -> Nop)
+                , textInput v (UpdateArg1 line)
+                ]
 
-                Arg v ->
-                    var1 v
+        var1ca2 : Variable -> Int -> Html Msg
+        var1ca2 v ca =
+            body indent
+                [ span [ class "mr1" ] [ text meta.button ]
+                , textInput "$" (\_ -> Nop)
+                , textInput v (UpdateArg1 line)
+                , textInput " ^" (\_ -> Nop)
+                , textInput (String.fromInt ca) (UpdateArg2 line)
+                ]
+    in
+    case instr of
+        Fun v ca ->
+            var1ca2 v ca
 
-                Let v ->
-                    var1 v
+        Loop v ca ->
+            var1ca2 v ca
 
-                Get v ->
-                    var1 v
+        If v ca ->
+            var1ca2 v ca
 
-                Set v ->
-                    var1 v
+        Block v ca ->
+            var1ca2 v ca
 
-                Br v ->
-                    var1 v
+        End ->
+            body indent [ text meta.button ]
 
-                BrIf v ->
-                    var1 v
+        Arg v ->
+            var1 v
 
-                Call v ->
-                    var1 v
+        Let v ->
+            var1 v
 
-                Num n ->
-                    body indent
-                        [ span [ class "mr1" ] [ text meta.button ]
-                        , textInput (String.fromInt n) (UpdateArg1 line)
-                        ]
+        Get v ->
+            var1 v
 
-                op ->
-                    body indent <| [ text meta.button ]
-        )
+        Set v ->
+            var1 v
+
+        Br v ->
+            var1 v
+
+        BrIf v ->
+            var1 v
+
+        Call v ->
+            var1 v
+
+        Num n ->
+            body indent
+                [ span [ class "mr1" ] [ text meta.button ]
+                , textInput (String.fromInt n) (UpdateArg1 line)
+                ]
+
+        op ->
+            body indent <| [ text meta.button ]
 
 
 withinBounds : Position -> CodeDom -> Bool
@@ -511,7 +530,7 @@ view { ast, message, dragged, dom, mode } =
     in
     div [ onPointerMove ]
         [ header []
-            [ button [ class "windows-95", onClick ToggleMode ]
+            [ button [ class "wat", onClick ToggleMode ]
                 [ if mode == Code then
                     eye
 
@@ -532,7 +551,7 @@ view { ast, message, dragged, dom, mode } =
                         ""
                 )
             ]
-            (astToHtml cursor ast)
+            (astToHtml mode cursor ast)
         , section [ id "messages" ] [ text message ]
         , section [ id "instructions" ] (menuInstrToHtml cursor instructions)
         , viewPaddle dragged
