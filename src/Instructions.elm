@@ -104,14 +104,14 @@ getMeta instr =
         Block label ca ->
             { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow", wat = String.concat [ "block ", "$", label, "\n ", coarityToWat ca ] }
 
-        Loop _ ca ->
-            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow", wat = "" }
+        Loop label ca ->
+            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow", wat = String.concat [ "loop ", "$", label, "\n ", coarityToWat ca ] }
 
-        If _ ca ->
-            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow", wat = "" }
+        If label ca ->
+            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow", wat = String.concat [ "if ", "$", label, "\n ", coarityToWat ca ] }
 
         End ->
-            { button = "end", docs = "end of function, block, loop, or if", class = "control-flow", wat = "" }
+            { button = "end", docs = "end of function, block, loop, or if", class = "control-flow", wat = "end" }
 
         Else ->
             { button = "else", docs = "else branch of if statement", class = "control-flow", wat = "else" }
@@ -174,52 +174,52 @@ getMeta instr =
             { button = "let", docs = "local variable declaration", class = "variable", wat = String.concat [ "(local $", label, " i32)" ] }
 
         Set _ ->
-            { button = "set", docs = "set local variable", class = "variable", wat = "" }
+            { button = "set", docs = "set local variable", class = "variable", wat = "locat.set" }
 
         Get _ ->
-            { button = "get", docs = "get local variable", class = "variable", wat = "" }
+            { button = "get", docs = "get local variable", class = "variable", wat = "local.get" }
 
         Br _ ->
-            { button = "br", docs = "break to label", class = "control-flow", wat = "" }
+            { button = "br", docs = "break to label", class = "control-flow", wat = "br" }
 
         BrIf _ ->
-            { button = "br_if", docs = "if truthy break to label", class = "control-flow", wat = "" }
+            { button = "br_if", docs = "if truthy break to label", class = "control-flow", wat = "br_if" }
 
-        Call _ ->
-            { button = "call", docs = "call function", class = "control-flow", wat = "" }
+        Call fxn ->
+            { button = "call", docs = "call function", class = "control-flow", wat = "call $" ++ fxn }
 
         Return ->
-            { button = "return", docs = "return function", class = "control-flow", wat = "" }
+            { button = "return", docs = "return function", class = "control-flow", wat = "return" }
 
         Nop ->
-            { button = "nop", docs = "no operation", class = "control-flow", wat = "" }
+            { button = "nop", docs = "no operation", class = "control-flow", wat = "nop" }
 
         Drop ->
-            { button = "drop", docs = "drop top of stack", class = "control-flow", wat = "" }
+            { button = "drop", docs = "drop top of stack", class = "control-flow", wat = "drop" }
 
         Malloc ->
-            { button = "malloc", docs = "allocate n bytes", class = "memory", wat = "" }
+            { button = "malloc", docs = "allocate n bytes", class = "memory", wat = "call $malloc" }
 
         Free ->
-            { button = "free", docs = "free memory allocated with malloc", class = "memory", wat = "" }
+            { button = "free", docs = "free memory allocated with malloc", class = "memory", wat = "call $free" }
 
         Read1 ->
-            { button = "read1", docs = "read 1 bytee", class = "memory", wat = "" }
+            { button = "read1", docs = "read 1 bytee", class = "memory", wat = "i32.load8_s" }
 
         Read2 ->
-            { button = "read2", docs = "read 2 bytes", class = "memory", wat = "" }
+            { button = "read2", docs = "read 2 bytes", class = "memory", wat = "i32.load16_s" }
 
         Read4 ->
-            { button = "read4", docs = "read 4 bytes", class = "memory", wat = "" }
+            { button = "read4", docs = "read 4 bytes", class = "memory", wat = "i32.load" }
 
         Write1 ->
-            { button = "write1", docs = "write 1 byte", class = "memory", wat = "" }
+            { button = "write1", docs = "write 1 byte", class = "memory", wat = "i32.store8" }
 
         Write2 ->
-            { button = "write2", docs = "write 2 bytes", class = "memory", wat = "" }
+            { button = "write2", docs = "write 2 bytes", class = "memory", wat = "i32.store16" }
 
         Write4 ->
-            { button = "write4", docs = "write 4 bytes", class = "memory", wat = "" }
+            { button = "write4", docs = "write 4 bytes", class = "memory", wat = "i32.store" }
 
 
 instructions : List Instr

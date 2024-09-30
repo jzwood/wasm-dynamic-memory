@@ -80,7 +80,7 @@ initDom =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { mode = Code, ast = Block "cat" 3 :: List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
+    ( { mode = Code, ast = List.repeat init_rows EmptyLine, message = "", dragged = Nothing, dom = initDom }, cmdViewport )
 
 
 toggleMode : Mode -> Mode
@@ -399,7 +399,9 @@ astToWat line indent instr =
             getMeta instr
     in
     div [ class "pre-wrap" ]
-        [ text meta.wat
+        [ case instr of
+            _ ->
+                text meta.wat
         ]
 
 
