@@ -62,10 +62,11 @@ type Instr
     | Let Variable
     | Set Variable
     | Get Variable
-    | Fun Variable Coarity
-    | Block Label Coarity
-    | Loop Label Coarity
-    | If Label Coarity
+    | Fun Variable
+    | Block Label
+    | Loop Label
+    | If Label
+    | Result Int
     | Else
     | End
     | Br Label
@@ -86,7 +87,7 @@ type Instr
 
 coarityToWat : Int -> String
 coarityToWat ca =
-    List.repeat ca "(result i32)" |> String.join "\n "
+    List.repeat ca "(result i32)" |> String.join "\n"
 
 
 getMeta : Instr -> { button : String, docs : Docs, class : String, wat : String }
@@ -98,17 +99,17 @@ getMeta instr =
         EmptyLine ->
             { button = "~", docs = "empty line", class = "empty", wat = "" }
 
-        Fun _ ca ->
+        Fun _ ->
             { button = "fun", docs = "function definition", class = "function", wat = "(func" }
 
-        Block label ca ->
-            { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow", wat = String.concat [ "block ", "$", label, "\n ", coarityToWat ca ] }
+        Block label ->
+            { button = "block", docs = "block $label: pop 0, push ^coarity. breaking to label jumps out of block.", class = "control-flow", wat = "block $" ++ label }
 
-        Loop label ca ->
-            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow", wat = String.concat [ "loop ", "$", label, "\n ", coarityToWat ca ] }
+        Loop label ->
+            { button = "loop", docs = "breaking to loop label jumps to top of loop", class = "control-flow", wat = "loop $" ++ label }
 
-        If label ca ->
-            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow", wat = String.concat [ "if ", "$", label, "\n ", coarityToWat ca ] }
+        If label ->
+            { button = "if", docs = "breaking to if label jumps out of if", class = "control-flow", wat = "if $" ++ label }
 
         End ->
             { button = "end", docs = "end of function, block, loop, or if", class = "control-flow", wat = "end" }
@@ -165,7 +166,7 @@ getMeta instr =
             { button = "«", docs = "bitwise left shift", class = "numeric", wat = "i32.shl" }
 
         Num n ->
-            { button = "num", docs = "constant integer", class = "numeric", wat = unwords [ "i32.const", String.fromInt n ] }
+            { button = "num", docs = "constant integer", class = "numeric", wat = "i32.const " ++ String.fromInt n }
 
         Arg a ->
             { button = "arg", docs = "function argument", class = "variable", wat = String.concat [ "(param $", a, " i32)" ] }
@@ -190,6 +191,9 @@ getMeta instr =
 
         Return ->
             { button = "return", docs = "return function", class = "control-flow", wat = "return" }
+
+        Result r ->
+            { button = "result", docs = "number of integers", class = "control-flow", wat = coarityToWat r }
 
         Nop ->
             { button = "nop", docs = "no operation", class = "control-flow", wat = "nop" }
@@ -243,14 +247,15 @@ instructions =
     , Rsh
     , Lsh
     , Num 0
-    , Fun "my_fun" 0
+    , Fun "my_fun"
     , Arg "arg"
     , Let "var"
     , Set "var"
     , Get "var"
-    , Block "bl" 0
-    , Loop "lo" 0
-    , If "if" 0
+    , Block "bl"
+    , Loop "lo"
+    , If "if"
+    , Result 0
     , Else
     , End
     , Br "lo"

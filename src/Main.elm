@@ -64,7 +64,6 @@ type alias Model =
 type Msg
     = OnUp Cursor
     | UpdateArg1 Cursor String
-    | UpdateArg2 Cursor String
     | OnDown Instr (Maybe Cursor) Position
     | OnMove Position
     | ResetDragged
@@ -115,6 +114,9 @@ update msg model =
                         Num _ ->
                             strToInt v |> Num
 
+                        Result _ ->
+                            strToInt v |> Result
+
                         Arg _ ->
                             Arg v
 
@@ -136,42 +138,17 @@ update msg model =
                         Call _ ->
                             Call v
 
-                        Fun _ ca ->
-                            Fun v ca
+                        Fun _ ->
+                            Fun v
 
-                        Block _ ca ->
-                            Block v ca
+                        Block _ ->
+                            Block v
 
-                        Loop _ ca ->
-                            Loop v ca
+                        Loop _ ->
+                            Loop v
 
-                        If _ ca ->
-                            If v ca
-
-                        _ ->
-                            i
-            in
-            ( { model | ast = updateAt c updateInstr ast }, Cmd.none )
-
-        UpdateArg2 c n ->
-            let
-                ca =
-                    strToInt n
-
-                updateInstr : Instr -> Instr
-                updateInstr i =
-                    case i of
-                        Fun v _ ->
-                            Fun v ca
-
-                        Block v _ ->
-                            Block v ca
-
-                        Loop v _ ->
-                            Loop v ca
-
-                        If v _ ->
-                            If v ca
+                        If _ ->
+                            If v
 
                         _ ->
                             i
@@ -355,16 +332,16 @@ indentLines instrToHtml =
                     ( ( nextLine, indent - 1 ), instrToHtml line (indent - 1) instr )
             in
             case instr of
-                Fun _ _ ->
+                Fun _ ->
                     indentedLine
 
-                Loop _ _ ->
+                Loop _ ->
                     indentedLine
 
-                If _ _ ->
+                If _ ->
                     indentedLine
 
-                Block _ _ ->
+                Block _ ->
                     indentedLine
 
                 End ->
@@ -445,38 +422,37 @@ astToCode cursor line indent instr =
         var1 v =
             body indent
                 [ span [ class "mr1" ] [ text meta.button ]
-                , textInput "$" (\_ -> Nop)
                 , textInput (strToLabel v) (UpdateArg1 line)
                 ]
 
-        var1ca2 : Variable -> Int -> Html Msg
-        var1ca2 v ca =
+        num1 : Int -> Html Msg
+        num1 n =
             body indent
                 [ span [ class "mr1" ] [ text meta.button ]
-                , textInput "$" (\_ -> Nop)
-                , textInput (strToLabel v) (UpdateArg1 line)
-                , textInput " ^" (\_ -> Nop)
-                , textInput (String.fromInt ca) (UpdateArg2 line)
+                , textInput (String.fromInt n) (UpdateArg1 line)
                 ]
     in
     case instr of
-        Fun v ca ->
-            var1ca2 v ca
+        Fun v ->
+            var1 v
 
-        Loop v ca ->
-            var1ca2 v ca
+        Loop v ->
+            var1 v
 
-        If v ca ->
-            var1ca2 v ca
+        If v ->
+            var1 v
 
-        Block v ca ->
-            var1ca2 v ca
+        Block v ->
+            var1 v
 
         End ->
             body indent [ text meta.button ]
 
         Arg v ->
             var1 v
+
+        Result n ->
+            num1 n
 
         Let v ->
             var1 v
@@ -497,10 +473,7 @@ astToCode cursor line indent instr =
             var1 v
 
         Num n ->
-            body indent
-                [ span [ class "mr1" ] [ text meta.button ]
-                , textInput (String.fromInt n) (UpdateArg1 line)
-                ]
+            num1 n
 
         op ->
             body indent <| [ text meta.button ]
