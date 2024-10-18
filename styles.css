@@ -228,6 +228,10 @@ button.wat, .instr {
   touch-action: none;
 }
 
+.warn {
+  color: yellow;
+}
+
 /************* GENERAL *************/
 
 .input {

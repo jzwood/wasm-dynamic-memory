@@ -359,7 +359,7 @@ astToHtml mode cursor ast =
     let
         check : Typecheck
         check =
-            typecheck ast
+            log "CAT" (typecheck ast)
     in
     case mode of
         Code ->
@@ -405,7 +405,16 @@ astToCode cursor check line indent instr =
 
         warning : Html Msg
         warning =
-            div [] []
+            case check of
+                Err err ->
+                    if err.line == line then
+                        div [ class "mr1", class "warn" ] [ text "BAD" ]
+
+                    else
+                        text ""
+
+                _ ->
+                    text ""
 
         body : Int -> List (Html Msg) -> Html Msg
         body i innerHtml =
@@ -424,7 +433,7 @@ astToCode cursor check line indent instr =
                     , style "margin-left" (String.fromInt (i * 2) ++ "ch")
                     ]
                     innerHtml
-                , div [ style "flex-grow" "1" ] [ warning ]
+                , div [ style "flex-grow" "1", style "justify-content" "end" ] [ warning ]
                 ]
 
         var1 : Variable -> Html Msg

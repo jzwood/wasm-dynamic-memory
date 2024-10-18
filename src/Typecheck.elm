@@ -2,7 +2,7 @@ module Typecheck exposing (..)
 
 import Dict exposing (Dict)
 import Instructions exposing (..)
-import List.Extra exposing (find, last, scanl)
+import List.Extra exposing (dropWhileRight, find, last, scanl)
 import Result exposing (Result)
 
 
@@ -45,11 +45,14 @@ balancedParens instrs =
         alg instr ( line, indent ) =
             ( line + 1, indent + getIndent instr )
 
+        instructions =
+            dropWhileRight (\instr -> instr == EmptyLine) instrs
+
         indentations =
-            scanl alg ( 0, 0 ) instrs
+            scanl alg ( 0, 0 ) instructions
 
         ( lastLine, lastIndentation ) =
-            List.foldl alg ( 0, 0 ) instrs
+            List.foldl alg ( 0, 0 ) instructions
 
         subZero =
             find (\( _, indent ) -> indent < 0) indentations
