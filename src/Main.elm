@@ -14,7 +14,7 @@ import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, removeAt, updateAt)
 import Task
-import Typecheck exposing (..)
+import Typecheck exposing (Typecheck, typecheck)
 import Utils exposing (..)
 
 
@@ -356,9 +356,14 @@ indentLines instrToHtml =
 
 astToHtml : Mode -> Maybe Cursor -> List Instr -> List (Html Msg)
 astToHtml mode cursor ast =
+    let
+        check : Typecheck
+        check =
+            typecheck ast
+    in
     case mode of
         Code ->
-            indentLines (astToCode cursor) ast
+            indentLines (astToCode cursor check) ast
 
         WAT ->
             [ div [ id "wat" ]
@@ -382,8 +387,8 @@ astToWat line indent instr =
         ]
 
 
-astToCode : Maybe Cursor -> Cursor -> Int -> Instr -> Html Msg
-astToCode cursor line indent instr =
+astToCode : Maybe Cursor -> Typecheck -> Cursor -> Int -> Instr -> Html Msg
+astToCode cursor check line indent instr =
     let
         meta =
             getMeta instr
@@ -397,6 +402,10 @@ astToCode cursor line indent instr =
 
             else
                 ""
+
+        warning : Html Msg
+        warning =
+            div [] []
 
         body : Int -> List (Html Msg) -> Html Msg
         body i innerHtml =
@@ -415,7 +424,7 @@ astToCode cursor line indent instr =
                     , style "margin-left" (String.fromInt (i * 2) ++ "ch")
                     ]
                     innerHtml
-                , div [ style "flex-grow" "1" ] []
+                , div [ style "flex-grow" "1" ] [ warning ]
                 ]
 
         var1 : Variable -> Html Msg
