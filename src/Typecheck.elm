@@ -7,11 +7,22 @@ import Result exposing (Result)
 
 
 type Error
-    = UnbalancedParams
+    = OverIndented
+    | UnderIndented
 
 
 type alias Typecheck =
     Result { line : Cursor, error : Error } ()
+
+
+showErr : Error -> String
+showErr err =
+    case err of
+        OverIndented ->
+            "Over Indented"
+
+        UnderIndented ->
+            "Under Indented"
 
 
 typecheck : List Instr -> Typecheck
@@ -60,13 +71,13 @@ balancedParens instrs =
     case subZero of
         Nothing ->
             if lastIndentation > 0 then
-                Err { line = lastLine, error = UnbalancedParams }
+                Err { line = lastLine, error = OverIndented }
 
             else
                 Ok ()
 
         Just ( line, indent ) ->
-            Err { line = line, error = UnbalancedParams }
+            Err { line = line, error = UnderIndented }
 
 
 topLevelFunctions : List Instr -> Typecheck

@@ -14,7 +14,7 @@ import Instructions exposing (..)
 import Json.Decode as Decode
 import List.Extra exposing (mapAccuml, removeAt, updateAt)
 import Task
-import Typecheck exposing (Typecheck, typecheck)
+import Typecheck exposing (Typecheck, showErr, typecheck)
 import Utils exposing (..)
 
 
@@ -408,7 +408,7 @@ astToCode cursor check line indent instr =
             case check of
                 Err err ->
                     if err.line == line then
-                        div [ class "mr1", class "warn" ] [ text "BAD" ]
+                        div [ class "mr1", class "warn" ] [ text <| showErr err.error ]
 
                     else
                         text ""
@@ -430,7 +430,7 @@ astToCode cursor check line indent instr =
                     [ onDown (OnDown instr (Just line))
                     , onPointerCancel
                     , class "line-instr"
-                    , style "margin-left" (String.fromInt (i * 2) ++ "ch")
+                    , style "margin-left" (String.fromInt (max 0 (i * 2)) ++ "ch")
                     ]
                     innerHtml
                 , div [ style "flex-grow" "1", style "justify-content" "end" ] [ warning ]
